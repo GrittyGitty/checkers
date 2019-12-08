@@ -1,0 +1,13 @@
+@media only screen and (min-width: 850px) {
+    td, #trailingDiv {
+        width: 67px;
+        height: 67px;
+    }
+}
+@media only screen and (max-width: 850px) {
+    td, #trailingDiv {
+        --cellsize: calc((60vw) / 8);
+        width: var(--cellsize);
+        height: var(--cellsize);
+    }
+}

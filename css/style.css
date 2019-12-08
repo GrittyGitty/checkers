@@ -1,0 +1,34 @@
+body {
+    margin: 10px 0 0 10px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td, #trailingDiv{
+    background-position: center;
+    background-size: 90% 90%;
+    background-repeat: no-repeat;
+    user-select: none;
+}
+
+td {
+    border: 1px solid black;
+}
+
+#trailingDiv {
+    z-index: 5;
+    position: absolute;
+}
+
+.grab {
+    cursor: grab;
+}
+
+.colored {
+    background-color: rgb(53, 56, 205);
+}
+
+
+
