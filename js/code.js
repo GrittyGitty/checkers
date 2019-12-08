@@ -13,6 +13,7 @@ class GridUpdate {
     }
 }
 
+
 class BoardState {
     constructor(grid, turnColor) {
         this.grid = grid;
@@ -68,6 +69,7 @@ class BoardState {
     }
 }
 
+
 let gridString = `
 40404040
 04040404
@@ -75,8 +77,8 @@ let gridString = `
 44444444
 44444444
 24242424
-42424242
-24242424
+43424242
+24442424
 `.trim().split("\n");
 let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fill(0)).map((row, rIndex) =>
     row.map((cell, cIndex) => Number(gridString[rIndex].charAt(cIndex)))
@@ -88,8 +90,7 @@ state.updateUI();
 
 function mouseDown(event) {
     let {row: downRow, column: downColumn} = getIndicesForMouseCoordinates(event);
-    let gridCellValue = state.grid[downRow][downColumn];//(state.table, downRow, downColumn);
-
+    let gridCellValue = state.grid[downRow][downColumn];
     if (gridCellValue === emptyPicIndex())
         return;
 
@@ -98,8 +99,7 @@ function mouseDown(event) {
     container.addEventListener("mousemove", pieceDrag);
     container.addEventListener("mouseup", function mouseup(event) {
         removeTrailingPiece(event);
-        let updates = [new GridUpdate(downRow, downColumn, pieces[emptyPicIndex()]), ...checkMove(event, {
-            gridCellValue,
+        let updates = [new GridUpdate(downRow, downColumn, pieces[emptyPicIndex()]), ...checkMove(state.grid, getIndicesForMouseCoordinates(event), {
             downRow,
             downColumn
         })];
@@ -125,27 +125,81 @@ function mouseDown(event) {
     }
 }
 
-
-function checkMove(mouseUpEvent, {gridCellValue, downRow, downColumn}) {
+function checkMove(grid, upCoords, {downRow, downColumn}) {
+    let {row: upRow, column: upColumn} = upCoords;
     let updates = [];
-    let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(mouseUpEvent);
+    let startCell = grid[downRow][downColumn];
+    let isKing = pieces[startCell].includes("king");
+    let direction = cellColor(startCell) === colors[0] ? 1 : -1;
+
+    let finalCell = grid[upRow][upColumn];
+
     if (upRow === -1 && upColumn === -1)
         return updates;
-    if (state.currentTurn !== colorForVal(gridCellValue)){
+
+    if (state.currentTurn !== cellColor(startCell)) {
         alert("Not your turn!");
         return updates;
     }
-    if (Math.abs(upRow - downRow) !== Math.abs(upColumn - downColumn)) {
-        alert("illegal move!");
+
+    if (finalCell !== emptyPicIndex()) {
+        alert("cannot override piece!");
         return updates;
     }
+
+    if ((Math.sign(upRow - downRow) !== direction) && !isKing) {
+        alert("only kings can move backwards!");
+        return updates;
+    }
+
+    let xSteps = Math.abs(upRow - downRow), ySteps = Math.abs(upColumn - downColumn);
+    if (xSteps !== ySteps) {
+        alert("only diagonal moves!");
+        return updates;
+    }
+
+    if (xSteps === 1) {
+        if (check)
+            }
+
+    if ((upRow === grid.length - 1) || upRow === 0)
+        updates.push(new GridUpdate(upRow, upColumn, pieces.indexOf(cellColor(startCell) + "_" + "king")));
+
     updates.push(new GridUpdate(upRow, upColumn, state.grid[downRow][downColumn]));
     return updates;
 }
 
-function colorForVal(gridVal) {
+function cellColor(gridVal) {
     return pieces[gridVal].split("_")[0];
 }
+
+
+const possibleValidYs = [2, -2];
+const validXs = [2, -2];
+
+function allEatingPossibilitiesForCell(grid, startX, startY) {
+    let possibleEatings = [];
+    let startCell = grid[startX][startY];
+    let validYs = pieces[startCell].includes("king") ? possibleValidYs.slice(0) : [possibleValidYs[colors.indexOf(cellColor(grid[startX][startY]))]];
+    for (let y of validYs) {
+        for (let x of validXs) {
+            let finalCellX = startX + x, finalCellY = startY + y;
+            let oneBeforeX = (Math.abs(startX) - 1) * Math.sign(finalCellX),
+                oneBeforeY = (Math.abs(startY) - 1) * Math.sign(finalCellY);
+            let finalCell = grid[finalCellX][finalCellY];
+            let oneBefore = grid[oneBeforeX][oneBeforeY];
+            if (finalCell === emptyPicIndex())
+                if (cellColor(oneBefore) === BoardState.oppositeColor(cellColor(startCell))) {
+                    let firstUpdate = new GridUpdate(startX, startY, emptyPicIndex());
+                    let secondUpdate = new GridUpdate(oneBeforeX, oneBeforeY, emptyPicIndex());
+                    let thirdUpdate = new GridUpdate(finalCellX, finalCellY, startCell);
+                    possibleEatings.push([firstUpdate, secondUpdate, thirdUpdate]);
+                }
+        }
+    }
+    return possibleEatings;
+}
+
 
 function getIndicesForMouseCoordinates(event) {
     let tableParams = document.querySelector("#table").getBoundingClientRect();
@@ -164,56 +218,69 @@ function getIndicesForMouseCoordinates(event) {
     };
 }
 
-function countColor(grid, color) {
-    let count = 0;
-    for (let row of grid) {
-        count += row.reduce((accumulator, currentValue) => {
-            return (pieces[currentValue].split("_")[0] === color) ? accumulator + 1 : accumulator;
-        }, count);
+function allCellsForColor(grid, color) {
+    let cells = [];
+    for (let row of Object.keys(grid)) {
+        for (let column of Object.keys(grid[row])) {
+            if (cellColor(grid[row][column]) === color)
+                cells.push[{row: row, column: column}];
+        }
     }
-    return count;
+    return cells;
 }
 
-function divideMeasure(measure, divider) {
-    var number = Number(measure.replace(/\D*/g, ""));
-    var measurement = measure.replace(/\d*/, "");
-    return number / divider + measurement;
-}
+function computeEndGame(grid) {
+    let lostColor;
+    for (let color of colors) {
+        for (let {row, column} of allCellsForColor(grid, color)) {
+            if (!allEatingPossibilitiesForCell(grid, row, column).length)
+                break;
+        }
+        lostColor
+        return "";
+    }
+
+    function divideMeasure(measure, divider) {
+        var number = Number(measure.replace(/\D*/g, ""));
+        var measurement = measure.replace(/\d*/, "");
+        return number / divider + measurement;
+    }
 
 
-function emptyPicIndex() {
-    return pieces.length - 1;
-}
+    function emptyPicIndex() {
+        return pieces.length - 1;
+    }
 
 
 //not immutable!
-function getCellRef(table, row, column) {
-    return table.rows[row].cells[column];
-}
-
-
-function deepCopy2DArr(arr) {
-    return arr.map(
-        (row, rIndex) => row.map((column, cIndex) => column));
-}
-
-function createTable(rows, columns) {
-    var table = document.createElement("table");
-    for (let i = 0; i < rows; i++) {
-        var row = document.createElement("tr");
-        for (let j = 0; j < columns; j++) {
-            var cell = document.createElement("td");
-            if ((i + j) % 2 !== 0) {
-                cell.className = "colored";
-            }
-            row.appendChild(cell);
-        }
-        table.appendChild(row);
+    function getCellRef(table, row, column) {
+        return table.rows[row].cells[column];
     }
-    table.id = "table";
-    return table;
-}
 
-function indexOfImageAtURL(url) {
-    return pieces[pieces.indexOf(url.match(/"pictures[/](.*)"/)[1])];
-}
+
+    function deepCopy2DArr(arr) {
+        return arr.map(
+            (row, rIndex) => row.map((column, cIndex) => column));
+    }
+
+    function createTable(rows, columns) {
+        var table = document.createElement("table");
+        for (let i = 0; i < rows; i++) {
+            var row = document.createElement("tr");
+            for (let j = 0; j < columns; j++) {
+                var cell = document.createElement("td");
+                if ((i + j) % 2 !== 0) {
+                    cell.className = "colored";
+                }
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+        table.id = "table";
+        return table;
+    }
+
+    function indexOfImageAtURL(url) {
+        return pieces[pieces.indexOf(url.match(/"pictures[/](.*)"/)[1])];
+
+    }
