@@ -1,32 +1,70 @@
 const pieces = ["black_piece", "black_king", "red_piece", "red_king", "empty"];
+const colors = Array.from(new Set(pieces.slice(0, pieces.length - 1).map(value => value.split("_")[0])));
+
 container = document.querySelector("#containerBoard");
 trailDiv = document.querySelector("#trailingDiv");
+turnDiv = document.querySelector("#turnDiv");
 
 
-class Update {
+class GridUpdate {
     constructor(row, column, value) {
         this.indices = {row: row, column: column};
         this.value = value;
     }
 }
 
-class boardState {
-    constructor(grid) {
+class BoardState {
+    constructor(grid, turnColor) {
         this.grid = grid;
-        this.table = getTableForGrid(grid);
+        this.currentTurn = turnColor;
+        this.table = BoardState.getTableForGrid(grid);
         this.table.addEventListener("mousedown", (event) => mouseDown(event));
     }
 
     updateGrid(updates) {
-        let newGrid = computeGrid(this.grid, updates);
-        return new boardState(newGrid);
+        let newGrid = BoardState.computeGrid(this.grid, updates);
+        return new BoardState(newGrid, this.currentTurn);
+    }
+
+    updateCurrentTurn() {
+        let grid = this.grid;
+        return new BoardState(grid, BoardState.oppositeColor(this.currentTurn));
     }
 
     updateUI() {
         let currentUITable = container.querySelector("table");
         if (currentUITable !== null) currentUITable.remove();
-        container.appendChild(this.table);
+        container.insertBefore(this.table, container.childNodes[0]);
+        turnDiv.style.backgroundColor = this.currentTurn;
         return this;
+    }
+
+    static oppositeColor(color) {
+        return color === colors[0] ? colors[1] : colors[0];
+    }
+
+    static getTableForGrid(grid) {
+        let newTable = createTable(grid.length, grid[0].length);
+        let rowsIndices = Object.keys(grid);
+        for (let row = 0; row < grid.length; row++) {
+            for (let column = 0; column < grid[0].length; column++) {
+                let cellVal = grid[row][column];
+                let actualBoardCell = getCellRef(newTable, row, column);
+                if (cellVal < pieces.length - 1) {
+                    actualBoardCell.className += " grab";
+                    actualBoardCell.style.backgroundImage = `url('pictures/${pieces[grid[row][column]]}.png')`;
+                }
+            }
+        }
+        return newTable;
+    }
+
+    static computeGrid(grid, update) {
+        let gridCopy = deepCopy2DArr(grid);
+        update.forEach(({indices: {row, column}, value}) => {
+            gridCopy[row][column] = value;
+        });
+        return gridCopy;
     }
 }
 
@@ -44,44 +82,43 @@ let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fil
     row.map((cell, cIndex) => Number(gridString[rIndex].charAt(cIndex)))
 );
 
-let state = new boardState(grid);
+let state = new BoardState(grid, colors[1]);
 state.updateUI();
 
 
-let oldGrid;
-
 function mouseDown(event) {
-    oldGrid = state.grid;
     let {row: downRow, column: downColumn} = getIndicesForMouseCoordinates(event);
-    let cell = getCellRef(state.table, downRow, downColumn);
-    if (cell.style.backgroundImage === "")
+    let gridCellValue = state.grid[downRow][downColumn];//(state.table, downRow, downColumn);
+
+    if (gridCellValue === emptyPicIndex())
         return;
 
+    let trailDiv = document.getElementById("trailingDiv");
 
-    window.addEventListener("mousemove", trailMouseWithPiece);
-    window.addEventListener("mouseup", function mouseup(event) {
+    container.addEventListener("mousemove", pieceDrag);
+    container.addEventListener("mouseup", function mouseup(event) {
         removeTrailingPiece(event);
-        updates = [new Update(downRow, downColumn, pieces[emptyPicIndex()]), ...checkMove(event, {
-            cell,
+        let updates = [new GridUpdate(downRow, downColumn, pieces[emptyPicIndex()]), ...checkMove(event, {
+            gridCellValue,
             downRow,
             downColumn
         })];
-        state = (updates.length !== 1) ? state.updateGrid(updates).updateUI() : state.updateUI();
-        window.removeEventListener("mouseup", mouseup);
+        state = (updates.length !== 1) ? state.updateGrid(updates).updateCurrentTurn().updateUI() : state.updateUI();
+        container.removeEventListener("mouseup", mouseup);
     });
 
 
-    function trailMouseWithPiece(event) {
-        update = new Update(downRow, downColumn, pieces[emptyPicIndex()]);
-        state.updateGrid([update]).updateUI();
+    function pieceDrag(event) {
+        state.updateGrid([new GridUpdate(downRow, downColumn, pieces[emptyPicIndex()])]).updateUI();
         ({width, height} = trailDiv.getBoundingClientRect());
+        let cell = getCellRef(state.table, downRow, downColumn);
         trailDiv.style.backgroundImage = cell.style.backgroundImage;
         trailDiv.style.top = event.clientY - height / 2 + "px";
         trailDiv.style.left = event.clientX - width / 2 + "px";
     }
 
     function removeTrailingPiece(event) {
-        window.removeEventListener("mousemove", trailMouseWithPiece);
+        container.removeEventListener("mousemove", pieceDrag);
         trailDiv.style.backgroundImage = "";
         trailDiv.style.top = "-1000px";
         trailDiv.style.left = "-1000px";
@@ -89,22 +126,34 @@ function mouseDown(event) {
 }
 
 
-function checkMove(mouseUpEvent, {cell, downRow, downColumn}) {
+function checkMove(mouseUpEvent, {gridCellValue, downRow, downColumn}) {
     let updates = [];
     let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(mouseUpEvent);
     if (upRow === -1 && upColumn === -1)
         return updates;
-    if (Math.abs(upRow - downRow) !== Math.abs(upColumn - downColumn))
+    if (state.currentTurn !== colorForVal(gridCellValue)){
+        alert("Not your turn!");
         return updates;
-
-    updates.push(new Update(upRow, upColumn, oldGrid[downRow][downColumn]));
+    }
+    if (Math.abs(upRow - downRow) !== Math.abs(upColumn - downColumn)) {
+        alert("illegal move!");
+        return updates;
+    }
+    updates.push(new GridUpdate(upRow, upColumn, state.grid[downRow][downColumn]));
     return updates;
 }
 
+function colorForVal(gridVal) {
+    return pieces[gridVal].split("_")[0];
+}
 
 function getIndicesForMouseCoordinates(event) {
     let tableParams = document.querySelector("#table").getBoundingClientRect();
-    let x = event.clientX, y = event.clientY, height = tableParams.height, width = tableParams.width;
+    subtractFromX = tableParams.left + window.pageXOffset;
+    subtractFromY = tableParams.top + window.pageYOffset;
+
+    let x = event.clientX - subtractFromX, y = event.clientY - subtractFromY, height = tableParams.height,
+        width = tableParams.width;
     if (x > width || y > height)
         return {row: -1, column: -1};
     let rows = state.grid.length;
@@ -119,7 +168,7 @@ function countColor(grid, color) {
     let count = 0;
     for (let row of grid) {
         count += row.reduce((accumulator, currentValue) => {
-            return (pieces[currentValue].split("_")[0] === color) ? ++accumulator : accumulator;
+            return (pieces[currentValue].split("_")[0] === color) ? accumulator + 1 : accumulator;
         }, count);
     }
     return count;
@@ -131,33 +180,9 @@ function divideMeasure(measure, divider) {
     return number / divider + measurement;
 }
 
-function getTableForGrid(grid) {
-    let newTable = createTable(grid.length, grid[0].length);
-    rowsIndices = Object.keys(grid);
-    for (let row = 0; row < grid.length; row++) {
-        for (let column = 0; column < grid[0].length; column++) {
-            cellVal = grid[row][column];
-            actualBoardCell = getCellRef(newTable, row, column);
-            if (cellVal < pieces.length - 1) {
-                actualBoardCell.className += " grab";
-                actualBoardCell.style.backgroundImage = `url('pictures/${pieces[grid[row][column]]}.png')`;
-            }
-        }
-    }
-    return newTable;
-}
 
 function emptyPicIndex() {
     return pieces.length - 1;
-}
-
-
-function computeGrid(grid, update) {
-    gridCopy = deepCopy2DArr(grid);
-    update.forEach(({indices: {row, column}, value}) => {
-        gridCopy[row][column] = value;
-    });
-    return gridCopy;
 }
 
 

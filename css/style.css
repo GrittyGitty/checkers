@@ -3,32 +3,50 @@ body {
 }
 
 table {
+
     border-collapse: collapse;
+    border: 1px solid black;
 }
 
-td, #trailingDiv{
+td, #trailingDiv {
     background-position: center;
     background-size: 90% 90%;
     background-repeat: no-repeat;
     user-select: none;
 }
 
-td {
-    border: 1px solid black;
-}
-
 #trailingDiv {
-    z-index: 5;
     position: absolute;
 }
 
+#turnDiv {
+    margin: auto;
+}
+
+#containerTurn {
+    text-align: center;
+    border: 1px solid black;
+    padding: 3px;
+    margin: 0 0 0 10px;
+}
 .grab {
     cursor: grab;
+}
+
+#containerBoard {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 
 .colored {
     background-color: rgb(53, 56, 205);
 }
 
+* {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    font-size: 1.05em;
+}
 
 
