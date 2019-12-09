@@ -4,6 +4,7 @@
         height: 67px;
     }
 }
+
 @media only screen and (max-width: 850px) {
     td, #trailingDiv, #turnDiv {
         --cellsize: calc((60vw) / 8);

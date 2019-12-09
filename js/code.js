@@ -70,7 +70,7 @@ class BoardState {
 }
 
 
-/*let gridString = `
+let gridString = `
 40404040
 04040404
 40404040
@@ -79,11 +79,11 @@ class BoardState {
 24242424
 43424242
 24442424
-`*/let gridString = `
+`/*let gridString = `
 044
 024
 024
-`
+`*/
     .trim().split("\n");
 let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fill(0)).map((row, rIndex) =>
     row.map((cell, cIndex) => Number(gridString[rIndex].charAt(cIndex)))
@@ -179,6 +179,9 @@ function cellColor(gridVal) {
 }
 
 
+
+king = {}
+
 const possibleValidDys = [2, -2];
 const validDxs = [2, -2];
 
@@ -208,6 +211,10 @@ function allEatingPossibilitiesForCell(grid, startRow, startColumn) {
         }
     }
     return possibleEatings;
+}
+
+function allMovingPossibilitiesForCell(){
+
 }
 
 
