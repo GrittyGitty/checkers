@@ -1,0 +1,58 @@
+/*let pieceLogic =
+    {
+        king: {
+            eatingCells: function (x, y) {
+                let options = [], Dys = [2, -2], Dxs = [2, -2];
+                Dys.forEach((dy) => Dxs.forEach(dx =>
+                {
+                    let final = {row: y + dy, column: x + dx};
+                    let eatenCoords = eatenCoords(dx,dy);
+                    let eaten = {row: eatenCoords.y, column: eatenCoords.x};
+                    let others =
+                }));
+                return cells;
+            },
+            eatenCoords: function (dx, dy) {
+                return {row: (Math.abs(dx) - 1) * Math.sign(dx), column: (Math.abs(dy) - 1) * Math.sign(dy)};
+            }
+
+        },
+        piece: {
+            eating: {
+                validDys: [-2],
+                validDxs: [2, -2]
+            },
+            eatenCoords: function (dx, dy) {
+                return {dx: (Math.abs(dx) - 1) * Math.sign(dx), dy: (Math.abs(dy) - 1) * Math.sign(dy)};
+            }
+        },
+        allEatingPossibilitiesForCell: (grid, startRow, startColumn) => {
+            let pieceType = pieceLogic[pieces[grid[startRow][startColumn]].split("_")[1]];
+            let startCell = grid[startRow][startColumn];
+            for (let dy of pieceType["eating"]["validDys"]) {
+                for (let dx of pieceType["eating"]["validDxs"]) {
+                    let finalRow = startRow + dy, finalColumn = startColumn + dx;
+                    if (rowOutOfBounds(finalRow) || columnOutOfBounds(finalColumn))
+                        continue;
+                    let finalCell = grid[finalRow][finalColumn];
+
+                    let {eatenDx, eatenDy} = pieceType["eatenCoords"](dx, dy);
+                    let eatenRow = startRow + eatenDx, eatenColumn = startColumn + eatenDx;
+                    let eatenCell = grid[eatenRow][eatenColumn];
+
+                    if (finalCell === emptyPicIndex())
+                        if (cellColor(eatenCell) === BoardState.oppositeColor(cellColor(startCell))) {
+                            possibleEatings.push({
+                                finalCell: {row: finalRow, column: finalColumn},
+                                updates: GridUpdate.updateFactory({
+                                    finalRow,
+                                    finalColumn
+                                }, startCell, new GridUpdate(eatenRow, eatenColumn), new GridUpdate(startRow, startColumn))
+                            });
+                        }
+                }
+            }
+            return possibleEatings;
+
+        }
+    };*/
