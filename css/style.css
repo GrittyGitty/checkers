@@ -1,12 +1,20 @@
+html {
+    width: 105%;
+    height: 105%;
+}
+
 body {
     margin: 10px 0 0 10px;
-    background-color: rgba(255, 0, 0, 0.2);
+    background-image: repeating-linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
+    width: 100%;
+    height: 100%;
 }
 
 table {
-
+    background-color: rgb(240, 248, 255);
     border-collapse: collapse;
-    border: 1px solid black;
+    box-shadow: 10px 10px 30px grey;
+
 }
 
 td, #trailingDiv {
@@ -14,6 +22,7 @@ td, #trailingDiv {
     background-size: 90% 90%;
     background-repeat: no-repeat;
     user-select: none;
+
 }
 
 #trailingDiv {
@@ -22,13 +31,14 @@ td, #trailingDiv {
 
 #turnDiv {
     margin: auto;
+    border-radius: 50%;
 }
 
 #containerTurn {
     text-align: center;
-    border: 1px solid black;
     padding: 3px;
     margin: 0 0 0 10px;
+    color: rgb(249, 255, 249);
 }
 
 .grab {
@@ -40,10 +50,12 @@ td, #trailingDiv {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    width: 95%;
+    height: 100%;
 }
 
 .colored {
-    background-color: rgb(52, 141, 30);
+    background-color: rgb(60, 180, 217);
 }
 
 * {
