@@ -22,16 +22,21 @@ class GridUpdate {
 
 
 class BoardState {
-    constructor(grid, turnColor) {
+    constructor(grid, turnColor, flaggedCell = undefined) {
         this.grid = grid;
         this.currentTurn = turnColor;
         this.table = BoardState.getTableForGrid(grid);
         this.table.addEventListener("mousedown", (event) => mouseDown(event));
+        this.flaggedCell = flaggedCell;
     }
 
     updateGrid(updates) {
         let newGrid = BoardState.computeGrid(this.grid, updates);
         return new BoardState(newGrid, this.currentTurn);
+    }
+
+    updateFlaggedCell(flagged = undefined) {
+        return new BoardState(this.grid, this.currentTurn, flagged);
     }
 
     updateCurrentTurn() {
@@ -52,19 +57,36 @@ class BoardState {
     }
 
     static getTableForGrid(grid) {
-        let newTable = createTable(grid.length, grid[0].length);
+        let newTable = BoardState.createTable(grid.length, grid[0].length);
         let rowsIndices = Object.keys(grid);
         for (let row = 0; row < grid.length; row++) {
             for (let column = 0; column < grid[0].length; column++) {
                 let cellVal = grid[row][column];
-                let actualBoardCell = getCellRef(newTable, row, column);
+                let actualBoardCell = getActualTdDomElement(newTable, row, column);
                 if (cellVal < pieces.length - 1) {
-                    actualBoardCell.className += " grab";
                     actualBoardCell.style.backgroundImage = `url('pictures/${pieces[grid[row][column]]}.png')`;
+                    actualBoardCell.className += " tograb";
                 }
             }
         }
         return newTable;
+    }
+
+    static createTable(rows, columns) {
+        var table = document.createElement("table");
+        for (let i = 0; i < rows; i++) {
+            var row = document.createElement("tr");
+            for (let j = 0; j < columns; j++) {
+                var cell = document.createElement("td");
+                if ((i + j) % 2 !== 0) {
+                    cell.className = "colored";
+                }
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+        table.id = "table";
+        return table;
     }
 
     static computeGrid(grid, update) {
@@ -74,24 +96,43 @@ class BoardState {
         });
         return gridCopy;
     }
+
+    static handleMove(upRow, upColumn, downRow, downColumn) {
+        let startCell = state.grid[downRow][downColumn];
+        if (state.grid[upRow][upColumn] !== emptyPicIndex() || startCell === emptyPicIndex() || cellColor(startCell) !== state.currentTurn || (upRow === -1 && upColumn === -1))
+            return state.updateUI();
+        let flaggedCell = state.flaggedCell;
+        if (flaggedCell !== undefined && ((downRow !== flaggedCell.row) || downColumn !== flaggedCell.column))
+            return state.updateUI();
+
+        let updates = [...checkMove(state.grid, upRow, upColumn, downRow, downColumn)];
+        if (updates.length !== 0) { //was legal move...
+            let updatedState = state.updateGrid(updates);
+            let isEat = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("_")[1] !== "king") || (updates.length === 4),
+                canStillEat = (allTwoSquareMovesForCell(updatedState.grid, upRow, upColumn).length !== 0);
+            state = (isEat && canStillEat) ? // was eat, and there are more eating options for the same cell
+                updatedState.updateFlaggedCell({row: upRow, column: upColumn}) :
+                updatedState.updateFlaggedCell().updateCurrentTurn();
+            if (isColorLoss(state.grid, state.currentTurn)) {
+                alert(`${state.currentTurn} lost! :(`);
+                location.reload();
+            }
+        }
+        state.updateUI();
+    }
 }
 
 
 let gridString = `
 40404040
 04040404
-40404040
+40444040
 44444444
-44444444
-24242424
-43424242
-24442424
-`/*let gridString = `
-044
-024
-024
-`*/
-    .trim().split("\n");
+44404044
+24444444
+42424240
+24242444
+`.trim().split("\n");
 let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fill(0)).map((row, rIndex) =>
     row.map((cell, cIndex) => Number(gridString[rIndex].charAt(cIndex)))
 );
@@ -99,28 +140,26 @@ let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fil
 let state = new BoardState(grid, colors[1]);
 state.updateUI();
 
-
 function mouseDown(event) {
     let {row: downRow, column: downColumn} = getIndicesForMouseCoordinates(event);
-    let gridCellValue = state.grid[downRow][downColumn];
-    if (gridCellValue === emptyPicIndex())
-        return;
 
     let trailDiv = document.getElementById("trailingDiv");
 
     container.addEventListener("mousemove", pieceDrag);
     container.addEventListener("mouseup", function mouseup(event) {
-        removeTrailingPiece(event);
-        let upCell = getIndicesForMouseCoordinates(event);
-        let updates = [...checkMove(state.grid, upCell.row, upCell.column, downRow, downColumn)];
-        state = (updates.length !== 0) ? state.updateGrid(updates).updateCurrentTurn().updateUI() : state.updateUI();
-        container.removeEventListener("mouseup", mouseup);
-    });
+            removeTrailingPiece(event);
+            let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(event);
+            BoardState.handleMove(upRow, upColumn, downRow, downColumn);
+            container.removeEventListener("mouseup", mouseup);
+        }
+    );
 
     function pieceDrag(event) {
+        if (state.grid[downRow][downColumn] === emptyPicIndex())
+            return;
+        let cell = getActualTdDomElement(state.table, downRow,downColumn);
+        //-------------UI CHANGE: Only For The Purposes Of Drag------------------
         state.updateGrid([new GridUpdate(downRow, downColumn, emptyPicIndex())]).updateUI();
-        ({width, height} = trailDiv.getBoundingClientRect());
-        let cell = getCellRef(state.table, downRow, downColumn);
         trailDiv.style.backgroundImage = cell.style.backgroundImage;
         trailDiv.style.top = event.clientY - height / 2 + "px";
         trailDiv.style.left = event.clientX - width / 2 + "px";
@@ -134,16 +173,15 @@ function mouseDown(event) {
     }
 }
 
+function getTableRelativeXandY() {
+
+    ({width, height} = trailDiv.getBoundingClientRect());
+    return {width, height};
+}
+
 function checkMove(grid, upRow, upColumn, downRow, downColumn) {
     let updates = [];
     let startCell = grid[downRow][downColumn];
-
-    if (state.currentTurn !== cellColor(startCell)) {
-        alert("Not your turn!");
-        return updates;
-    }
-    if (upRow === -1 && upColumn === -1)
-        return updates;
 
     let notEatMoves = allOneSquareMovesForCell(grid, downRow, downColumn);
     let eatMoves = allTwoSquareMovesForCell(grid, downRow, downColumn);
@@ -163,7 +201,7 @@ function checkMove(grid, upRow, upColumn, downRow, downColumn) {
         }
     }
 
-    if ((upRow === grid.length - 1) || upRow === 0)
+    if (((upRow === grid.length - 1) || (upRow === 0)) && updates.length > 0)
         updates.push(new GridUpdate(upRow, upColumn, pieces.indexOf(cellColor(startCell) + "_" + "king")));
 
     return updates;
@@ -246,11 +284,11 @@ function allOneSquareMovesForCell(grid, startRow, startColumn) {
 
 function getIndicesForMouseCoordinates(event) {
     let tableParams = document.querySelector("#table").getBoundingClientRect();
-    subtractFromX = tableParams.left + window.pageXOffset;
-    subtractFromY = tableParams.top + window.pageYOffset;
+    let subtractFromX = tableParams.left + window.pageXOffset;
+    let subtractFromY = tableParams.top + window.pageYOffset;
+    let x = event.clientX - subtractFromX, y = event.clientY - subtractFromY, width = tableParams.width,
+        height = tableParams.height;
 
-    let x = event.clientX - subtractFromX, y = event.clientY - subtractFromY, height = tableParams.height,
-        width = tableParams.width;
     if (x > width || y > height)
         return {row: -1, column: -1};
     let rows = state.grid.length;
@@ -273,13 +311,7 @@ function allCellsForColor(grid, color) {
 }
 
 function isColorLoss(grid, color) {
-    return allCellsForColor(grid, color).some(({row, column}) => allTwoSquareMovesForCell(grid, row, column).length > 0);
-}
-
-function divideMeasure(measure, divider) {
-    var number = Number(measure.replace(/\D*/g, ""));
-    var measurement = measure.replace(/\d*/, "");
-    return number / divider + measurement;
+    return !allCellsForColor(grid, color).some(({row, column}) => allTwoSquareMovesForCell(grid, row, column).length > 0 || allOneSquareMovesForCell(grid, row, column).length > 0);
 }
 
 
@@ -287,9 +319,8 @@ function emptyPicIndex() {
     return pieces.length - 1;
 }
 
-
 //not immutable!
-function getCellRef(table, row, column) {
+function getActualTdDomElement(table, row, column) {
     return table.rows[row].cells[column];
 }
 
@@ -299,22 +330,6 @@ function deepCopy2DArr(arr) {
         (row, rIndex) => row.map((column, cIndex) => column));
 }
 
-function createTable(rows, columns) {
-    var table = document.createElement("table");
-    for (let i = 0; i < rows; i++) {
-        var row = document.createElement("tr");
-        for (let j = 0; j < columns; j++) {
-            var cell = document.createElement("td");
-            if ((i + j) % 2 !== 0) {
-                cell.className = "colored";
-            }
-            row.appendChild(cell);
-        }
-        table.appendChild(row);
-    }
-    table.id = "table";
-    return table;
-}
 
 function indexOfImageAtURL(url) {
     return pieces[pieces.indexOf(url.match(/"pictures[/](.*)"/)[1])];
