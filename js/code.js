@@ -125,13 +125,13 @@ class BoardState {
 
 let gridString = `
 40404040
-04040404
+04040444
 40444040
 44444444
-44404044
-24444444
+44404040
+24444404
 42424240
-24242444
+24244444
 `.trim().split("\n");
 let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fill(0)).map((row, rIndex) =>
     row.map((cell, cIndex) => Number(gridString[rIndex].charAt(cIndex)))
@@ -157,6 +157,7 @@ function mouseDown(event) {
     function pieceDrag(event) {
         if (state.grid[downRow][downColumn] === emptyPicIndex())
             return;
+        ({ width, height } = trailDiv.getBoundingClientRect());
         let cell = getActualTdDomElement(state.table, downRow,downColumn);
         //-------------UI CHANGE: Only For The Purposes Of Drag------------------
         state.updateGrid([new GridUpdate(downRow, downColumn, emptyPicIndex())]).updateUI();
