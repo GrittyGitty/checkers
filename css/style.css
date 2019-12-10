@@ -1,5 +1,6 @@
 body {
     margin: 10px 0 0 10px;
+    background-color: rgba(255, 0, 0, 0.2);
 }
 
 table {
@@ -29,6 +30,7 @@ td, #trailingDiv {
     padding: 3px;
     margin: 0 0 0 10px;
 }
+
 .grab {
     cursor: grab;
 }
