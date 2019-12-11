@@ -56,6 +56,12 @@ td, #trailingDiv {
     background-color: rgb(60, 180, 217);
 }
 
+/*.possibleMovingPoints {
+    opacity: 80%;
+    background-color: #b8dcf9;
+    transition: background-color 1s;
+}*/
+
 .tograb {
     cursor: grab
 }
@@ -64,6 +70,8 @@ td, #trailingDiv {
     cursor: grabbing;
     opacity: 80%;
 }
+
+
 
 * {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
