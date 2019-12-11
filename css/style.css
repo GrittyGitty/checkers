@@ -26,6 +26,8 @@ td, #trailingDiv {
 #trailingDiv {
     position: absolute;
     cursor: grabbing;
+    top: -1000px;
+    left: -1000px;
 }
 
 #turnDiv {
@@ -60,6 +62,7 @@ td, #trailingDiv {
 
 .tograb:active {
     cursor: grabbing;
+    opacity: 80%;
 }
 
 * {

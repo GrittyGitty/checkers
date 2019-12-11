@@ -120,22 +120,24 @@ class BoardState {
         }
         state.updateUI();
     }
+    
 }
 
-
-let gridString = `
-40404040
-04040444
-40444040
-44444444
-44404040
-24444404
-42424240
-24244444
-`.trim().split("\n");
-let grid = new Array(gridString.length).fill(new Array(gridString[0].length).fill(0)).map((row, rIndex) =>
-    row.map((cell, cIndex) => Number(gridString[rIndex].charAt(cIndex)))
+// Set:  "-" (Empty), "b" (black piece), "B" (black king), "r" (red piece), "R" (red king)
+let regularSetup = changeGridStringToNumbers(`
+-b-b-b-b
+b-b-b-b-
+-b-b-b-b
+--------
+--------
+r-r-r-r-
+-r-r-r-r
+r-r-r-r-
+`).trim().split("\n");
+let grid = new Array(regularSetup.length).fill(new Array(regularSetup[0].length).fill(0)).map((row, rIndex) =>
+    row.map((cell, cIndex) => Number(regularSetup[rIndex].charAt(cIndex)))
 );
+
 
 let state = new BoardState(grid, colors[1]);
 state.updateUI();
@@ -157,8 +159,8 @@ function mouseDown(event) {
     function pieceDrag(event) {
         if (state.grid[downRow][downColumn] === emptyPicIndex())
             return;
-        ({ width, height } = trailDiv.getBoundingClientRect());
-        let cell = getActualTdDomElement(state.table, downRow,downColumn);
+        ({width, height} = trailDiv.getBoundingClientRect());
+        let cell = getActualTdDomElement(state.table, downRow, downColumn);
         //-------------UI CHANGE: Only For The Purposes Of Drag------------------
         state.updateGrid([new GridUpdate(downRow, downColumn, emptyPicIndex())]).updateUI();
         trailDiv.style.backgroundImage = cell.style.backgroundImage;
@@ -172,12 +174,6 @@ function mouseDown(event) {
         trailDiv.style.top = "-1000px";
         trailDiv.style.left = "-1000px";
     }
-}
-
-function getTableRelativeXandY() {
-
-    ({width, height} = trailDiv.getBoundingClientRect());
-    return {width, height};
 }
 
 function checkMove(grid, upRow, upColumn, downRow, downColumn) {
@@ -332,15 +328,19 @@ function deepCopy2DArr(arr) {
 }
 
 
-function indexOfImageAtURL(url) {
-    return pieces[pieces.indexOf(url.match(/"pictures[/](.*)"/)[1])];
-
-}
-
 function rowOutOfBounds(...indices) {
     return indices.some(row => row > state.grid.length - 1 || row < 0);
 }
 
 function columnOutOfBounds(...indices) {
     return indices.some(column => column > state.grid[0].length || column < 0);
+}
+
+function changeGridStringToNumbers(gridstring) {
+    return gridstring
+        .replace(/-/g, `${emptyPicIndex()}`)
+        .replace(/b/g, "0")
+        .replace(/B/g, "1")
+        .replace(/r/g, "2")
+        .replace(/R/g, "3");
 }
