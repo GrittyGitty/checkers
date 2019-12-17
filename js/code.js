@@ -4,7 +4,7 @@ const colors = Array.from(new Set(pieces.slice(0, pieces.length - 1).map(value =
 let mainDiv = document.querySelector("#containerBoard");
 let trailDiv = document.querySelector("#trailingDiv");
 let turnDiv = document.querySelector("#turnDiv");
-
+let g=8;
 
 class GridUpdate {
     constructor(row, column, value = pieceIndexForEmptyCell()) {
