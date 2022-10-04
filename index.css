@@ -1,26 +1,11 @@
-* {
-    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-    font-size: 1.05em;
-}
-
-html {
-    height: 100%;
-}
-
-body {
-    height: 100%;
-    margin: auto;
-    padding: 10px 0 0 10px;
-    background-image: linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
-}
-
 table {
     background-color: rgb(240, 248, 255);
     border-collapse: collapse;
     box-shadow: 10px 10px 30px grey;
 }
 
-td, #trailingDiv {
+td,
+#trailingDiv {
     background-position: center;
     background-size: 90% 90%;
     background-repeat: no-repeat;
@@ -34,27 +19,6 @@ td, #trailingDiv {
     left: -1000px;
 }
 
-#turnDiv {
-    margin: auto;
-    border-radius: 50%;
-}
-
-#containerTurn {
-    text-align: center;
-    padding: 3px;
-    margin: 0 0 0 10px;
-    color: rgb(249, 255, 249);
-}
-
-#containerBoard {
-    margin: auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 95%;
-    height: 100%;
-}
 
 .colored {
     background-color: rgb(60, 180, 217);
@@ -70,16 +34,38 @@ td, #trailingDiv {
 }
 
 @media only screen and (min-width: 850px) {
-    td, #trailingDiv, #turnDiv {
+
+    td,
+    #trailingDiv,
+    #turnDiv {
         width: 67px;
         height: 67px;
     }
 }
 
 @media only screen and (max-width: 850px) {
-    td, #trailingDiv, #turnDiv {
+
+    td,
+    #trailingDiv,
+    #turnDiv {
         --cellsize: calc((60vw) / 8);
         width: var(--cellsize);
         height: var(--cellsize);
     }
+}
+
+.piece-black {
+    background-image: url("./assets/black.png");
+}
+
+.piece-black-king {
+    background-image: url("./assets/black-king.png");
+}
+
+.piece-red {
+    background-image: url("./assets/red.png");
+}
+
+.piece-red-king {
+    background-image: url("./assets/red-king.png");
 }

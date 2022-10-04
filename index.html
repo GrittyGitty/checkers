@@ -1,19 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PVP vanilla checkers</title>
-        <link rel="stylesheet" href="./index.css">
-    </head>
-    <body>
-        <div id="containerBoard">
-            <div id="containerTurn"> current turn
-                <div id="turnDiv"></div>
-            </div>
-            <div id="trailingDiv"></div>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVP vanilla checkers</title>
+    <link href="./index.css" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <style>
+        * {
+            font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+            font-size: 1.05em;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            margin: auto;
+            padding: 10px 0 0 10px;
+            background-image: linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
+        }
+
+        #turnDiv {
+            margin: auto;
+            border-radius: 50%;
+        }
+
+        #containerTurn {
+            text-align: center;
+            padding: 3px;
+            margin: 0 50px 0 auto;
+            color: rgb(249, 255, 249);
+        }
+
+        #containerBoard {
+            margin: auto;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            width: 95%;
+            height: 100%;
+        }
+    </style>
+    <link rel="preload" href="./assets/red.png"/>
+    <link rel="preload" href="./assets/black.png"/>
+    <link rel="preload" href="./assets/red-king.png"/>
+    <link rel="preload" href="./assets/black-king.png"/>
+    <script defer src="./index.js"></script>
+</head>
+<body>
+    <div id="containerBoard">
+        <div id="containerTurn"> current turn
+            <div id="turnDiv"></div>
         </div>
-        <script defer src="./index.js"></script>
-    </body>
+        <div id="trailingDiv"></div>
+    </div>
+</body>
 </html>

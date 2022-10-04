@@ -1,5 +1,5 @@
-const pieces = ["black_piece", "black_king", "red_piece", "red_king", "empty"];
-const colors = Array.from(new Set(pieces.slice(0, pieces.length - 1).map(value => value.split("_")[0])));
+const pieces = ["black", "black-king", "red", "red-king", "empty"];
+const colors = ["black", "red"];
 
 let mainDiv = document.querySelector("#containerBoard");
 let trailDiv = document.querySelector("#trailingDiv");
@@ -64,8 +64,7 @@ class BoardState {
                 let cellVal = grid[row][column];
                 let actualBoardCell = getActualCellReference(newTable, row, column);
                 if (cellVal < pieces.length - 1) {
-                    actualBoardCell.style.backgroundImage = `url('assets/${pieces[grid[row][column]]}.png')`;
-                    actualBoardCell.className += " tograb";
+                    actualBoardCell.className += ` tograb piece-${pieces[grid[row][column]]}`;
                 }
             }
         }
@@ -157,14 +156,14 @@ function mouseDownTable(event) {
         }
     );
 
+    let cell = getActualCellReference(state.table, downRow, downColumn);
+    trailDiv.className = cell.className.split(" ").find(cls=>cls.startsWith("piece"));
     function pieceDrag(event) {
         if (state.grid[downRow][downColumn] === pieceIndexForEmptyCell())
             return;
         ({width, height} = trailDiv.getBoundingClientRect());
-        let cell = getActualCellReference(state.table, downRow, downColumn);
         //-------------UI CHANGE: Only For The Purposes Of Drag------------------
         state.updateGrid([new GridUpdate(downRow, downColumn, pieceIndexForEmptyCell())]).updateUI();
-        trailDiv.style.backgroundImage = cell.style.backgroundImage;
         trailDiv.style.top = event.clientY - height / 2 + "px";
         trailDiv.style.left = event.clientX - width / 2 + "px";
     }
