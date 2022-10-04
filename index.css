@@ -1,6 +1,10 @@
+* {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    font-size: 1.05em;
+}
+
 html {
     height: 100%;
-
 }
 
 body {
@@ -56,12 +60,6 @@ td, #trailingDiv {
     background-color: rgb(60, 180, 217);
 }
 
-/*.possibleMovingPoints {
-    opacity: 80%;
-    background-color: #b8dcf9;
-    transition: background-color 1s;
-}*/
-
 .tograb {
     cursor: grab
 }
@@ -71,11 +69,17 @@ td, #trailingDiv {
     opacity: 80%;
 }
 
-
-
-* {
-    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-    font-size: 1.05em;
+@media only screen and (min-width: 850px) {
+    td, #trailingDiv, #turnDiv {
+        width: 67px;
+        height: 67px;
+    }
 }
 
-
+@media only screen and (max-width: 850px) {
+    td, #trailingDiv, #turnDiv {
+        --cellsize: calc((60vw) / 8);
+        width: var(--cellsize);
+        height: var(--cellsize);
+    }
+}

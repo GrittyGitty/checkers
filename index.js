@@ -64,7 +64,7 @@ class BoardState {
                 let cellVal = grid[row][column];
                 let actualBoardCell = getActualCellReference(newTable, row, column);
                 if (cellVal < pieces.length - 1) {
-                    actualBoardCell.style.backgroundImage = `url('pictures/${pieces[grid[row][column]]}.png')`;
+                    actualBoardCell.style.backgroundImage = `url('assets/${pieces[grid[row][column]]}.png')`;
                     actualBoardCell.className += " tograb";
                 }
             }
