@@ -1,63 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="PVP vanilla checkers, author: Netanel Haber">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVP vanilla checkers</title>
-    <link href="./index.css" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <style>
-        * {
-            font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-            font-size: 1.05em;
-        }
-
-        html {
-            height: 100vh;
-            width: 100vw;
-        }
-
-        body {
-            height: 100%;
-            margin: auto;
-            background-image: linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
-        }
-
-        #turnDiv {
-            margin: auto;
-            border-radius: 50%;
-        }
-
-        #containerTurn {
-            text-align: center;
-            padding: 3px;
-            margin: 0  0 0 10px;
-            color: rgb(249, 255, 249);
-        }
-
-        #containerBoard {
-            margin: auto;
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            width: 95%;
-            height: 100%;
-        }
-    </style>
-    <link rel="preload" href="./assets/red.png"/>
-    <link rel="preload" href="./assets/black.png"/>
-    <link rel="preload" href="./assets/red-king.png"/>
-    <link rel="preload" href="./assets/black-king.png"/>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="preload" as="image" href="./assets/red.png" />
+    <link rel="preload" as="image" href="./assets/black.png" />
+    <link rel="preload" as="image" href="./assets/red-king.png" />
+    <link rel="preload" as="image" href="./assets/black-king.png" />
     <script defer src="./index.js"></script>
 </head>
+
 <body>
     <div id="containerBoard">
+        <table id="table">
+            <tr>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+            </tr>
+            <tr>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+            </tr>
+            <tr>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+            </tr>
+            <tr>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+            </tr>
+            <tr>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+            </tr>
+            <tr>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+            </tr>
+            <tr>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+            </tr>
+            <tr>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+                <td class="colored"></td>
+                <td ></td>
+            </tr>
+        </table>
         <div id="containerTurn"> current turn
             <div id="turnDiv"></div>
+            <button id="reset">Reset</button>
         </div>
         <div id="trailingDiv"></div>
     </div>
 </body>
+
 </html>

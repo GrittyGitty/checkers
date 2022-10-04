@@ -63,8 +63,9 @@ class BoardState {
             for (let column = 0; column < grid[0].length; column++) {
                 let cellVal = grid[row][column];
                 let actualBoardCell = getActualCellReference(newTable, row, column);
+                actualBoardCell.classList.add(`piece-${pieces[grid[row][column]]}`);
                 if (cellVal < pieces.length - 1) {
-                    actualBoardCell.className += ` tograb piece-${pieces[grid[row][column]]}`;
+                    actualBoardCell.classList.add('tograb');
                 }
             }
         }
@@ -108,7 +109,7 @@ class BoardState {
         let updates = [...generateGridUpdatesForMoveIfLegal(state.grid, upRow, upColumn, downRow, downColumn)];
         if (updates.length !== 0) { //was legal move...
             let updatedState = state.updateGrid(updates);
-            let isTheMoveAnEatMove = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("_")[1] !== "king") || (updates.length === 4),
+            let isTheMoveAnEatMove = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("-")[1] !== "king") || (updates.length === 4),
                 canTheMovingPieceStillEat = (allLegalEatingMovesForCell(updatedState.grid, upRow, upColumn).length !== 0);
             state = (isTheMoveAnEatMove && canTheMovingPieceStillEat) ? // was eat, and there are more eating options for the same cell
                 updatedState.updateFlaggedCell({row: upRow, column: upColumn}) :
@@ -120,26 +121,45 @@ class BoardState {
         }
         state.updateUI();
     }
+    static initialSetup = `
+    -b-b-b-b
+    b-b-b-b-
+    -b-b-b-b
+    --------
+    --------
+    r-r-r-r-
+    -r-r-r-r
+    r-r-r-r-
+    `;
+    static init({ setup = this.initialSetup, turn = "red" } = {}) {
+        const regularBoardSetup = changeGridStringToNumbers(setup).trim().split("\n").map(r => r.trim());
+        const grid = new Array(regularBoardSetup.length).fill(new Array(regularBoardSetup[0].length).fill(0)).map((row, rIndex) => row.map((cell, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex))));
+        return new BoardState(grid, turn).updateUI()
+    }
+
+    serialize() {
+        const classToAlias = ["b","B","r","R","-"];
+        return {
+            gridString: this.grid.map((r) => {
+                return r.map((c) => classToAlias[c]).join("")
+            }).join("\n"),
+            turn: this.currentTurn
+        }
+    }
 }
 
-// Set:  "-" (Empty), "b" (black piece), "B" (black king), "r" (red piece), "R" (red king)
-let regularBoardSetup = changeGridStringToNumbers(`
--b-b-b-b
-b-b-b-b-
--b-b-b-b
---------
---------
-r-r-r-r-
--r-r-r-r
-r-r-r-r-
-`).trim().split("\n");
-let grid = new Array(regularBoardSetup.length).fill(new Array(regularBoardSetup[0].length).fill(0)).map((row, rIndex) =>
-    row.map((cell, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex)))
-);
+const previousTurn = localStorage.getItem("turn");
+const previousGrid = localStorage.getItem("grid");
+let state = BoardState.init({ setup: previousGrid, turn: previousTurn });
+document.addEventListener("visibilitychange", () => {
+    const { gridString, turn } = state.serialize();
+    localStorage.setItem("grid", gridString)
+    localStorage.setItem("turn", turn)
+});
 
-
-let state = new BoardState(grid, colors[1]);
-state.updateUI();
+document.querySelector("#reset").addEventListener("click", ()=>{
+    state = BoardState.init();
+})
 
 
 function mouseDownTable(event) {
@@ -149,11 +169,11 @@ function mouseDownTable(event) {
 
     mainDiv.addEventListener("mousemove", pieceDrag);
     mainDiv.addEventListener("mouseup", function mouseup(event) {
-            removeTrailingPiece(event);
+        removeTrailingPiece(event);
             let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(event);
-            BoardState.handleMove(upRow, upColumn, downRow, downColumn);
-            mainDiv.removeEventListener("mouseup", mouseup);
-        }
+        BoardState.handleMove(upRow, upColumn, downRow, downColumn);
+        mainDiv.removeEventListener("mouseup", mouseup);
+    }
     );
 
     let cell = getActualCellReference(state.table, downRow, downColumn);
@@ -200,7 +220,7 @@ function generateGridUpdatesForMoveIfLegal(grid, upRow, upColumn, downRow, downC
     }
 
     if (((upRow === grid.length - 1) || (upRow === 0)) && updates.length > 0)
-        updates.push(new GridUpdate(upRow, upColumn, pieces.indexOf(colorForCell(startCell) + "_" + "king")));
+        updates.push(new GridUpdate(upRow, upColumn, pieces.indexOf(colorForCell(startCell) + "-" + "king")));
 
     return updates;
 }
@@ -211,7 +231,7 @@ function isThereAnEatingPossibilityForGivenColor(grid, color) {
 
 
 function colorForCell(gridVal) {
-    return gridVal !== pieceIndexForEmptyCell() ? pieces[gridVal].split("_")[0] : "empty";
+    return gridVal !== pieceIndexForEmptyCell() ? pieces[gridVal].split("-")[0] : "empty";
 }
 
 
