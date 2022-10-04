@@ -349,31 +349,3 @@ function changeGridStringToNumbers(gridstring) {
         .replace(/r/g, "2")
         .replace(/R/g, "3");
 }
-
-
-//experimental
-/*function registerEventsForTableCells(table, tdClassName, events, func, ...args) {
-    for (let i = 0, row; row = table.rows[i]; i++) {
-        for (let j = 0, col; col = row.cells[j]; j++) {
-            let cell = getActualCellReference(table, i, j);
-            if (cell.className.includes(tdClassName)) {
-                for (let event of events)
-                    cell.addEventListener(event, func(...args, i, j));
-            }
-        }
-    }
-}
-function highlight(table, grid, row, column) {
-    let moves = allTwoSquareMovesForCell(grid, row, column);
-    if (moves.length === 0 && !canAnyColoredCellEat(grid, cellColor(grid[row][column]))) {
-        moves = allOneSquareMovesForCell(grid, row, column);
-    }
-    for (let {row, column} of moves.map(move => move.finalCell)) {
-        let cell = getActualTdDomElement(table, row, column);
-        let regexp = /possibleMovingPoints/;
-        if (regexp.test(cell.className)) {
-            cell.className = cell.className.replace("possibleMovingPoints", "");
-        } else
-            cell.className += " possibleMovingPoints";
-    }
-}*/
