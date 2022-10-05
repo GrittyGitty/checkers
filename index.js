@@ -10,15 +10,15 @@ const EMPTY_VALUE = pieces.length - 1;
 const defaultSetup = {
     turn: "red",
     grid: `
-    -b-b-b-b
-    b-b-b-b-
-    -b-b-b-b
-    --------
-    --------
-    r-r-r-r-
-    -r-r-r-r
-    r-r-r-r-
-    `
+-b-b-b-b
+b-b-b-b-
+-b-b-b-b
+--------
+--------
+r-r-r-r-
+-r-r-r-r
+r-r-r-r-
+`.trim().split("\n").filter(Boolean).join("\n")
 };
 
 
@@ -370,7 +370,8 @@ const storageBackend = (() => {
     const STATE = "state";
     const GRID = "grid";
     const TURN = "turn";
-    const path = window.location.pathname;
+    const { pathname, origin } = window.location;
+
 
     const fromLocalStorage = () => {
         try {
@@ -392,11 +393,11 @@ const storageBackend = (() => {
         const params = new URLSearchParams();
         params.set(GRID, grid);
         params.set(TURN, turn);
-        history.pushState(null, '', `${path}?${params.toString()}`);
+        history.pushState(null, '', `${pathname}?${params.toString()}`);
         localStorage.setItem(STATE, JSON.stringify({ grid, turn }))
     };
     const reset = () => {
-        history.pushState(null, '', path);
+        history.pushState(null, '', pathname);
         localStorage.removeItem(STATE);
     };
 
@@ -405,7 +406,7 @@ const storageBackend = (() => {
         const { grid, turn } = fetch();
         params.set(GRID, grid);
         params.set(TURN, turn);
-        return `${path}?${params.toString()}`;
+        return `${origin}?${params.toString()}`;
     }
 
     return { fetch, persist, reset, compileSharingUrl };
@@ -414,7 +415,7 @@ const storageBackend = (() => {
 // MAIN:
 
 const store = (() => {
-    const { fetch, persist, reset } = storageBackend;
+    const { fetch, persist, reset, compileSharingUrl } = storageBackend;
     return {
         get state() {
             return fetch()
@@ -422,7 +423,10 @@ const store = (() => {
         set state({ grid, turn }) {
             persist({ grid, turn })
         },
-        reset
+        reset,
+        get share() {
+            return compileSharingUrl();
+        }
     }
 })()
 
@@ -431,3 +435,18 @@ document.querySelector("#reset").addEventListener("click", () => {
     state = BoardState.startSession(defaultSetup);
     store.reset();
 })
+document.querySelector("#share").addEventListener("click", () => {
+    navigator.clipboard.writeText(store.share).then(() => {
+        toast("URL with game-state copied to clipboard! 🎆🎆🎆")
+    })
+})
+
+function toast(text, ms = 2000) {
+    const atoast = document.createElement('div');
+    atoast.classList.add("toast")
+    atoast.innerText = text;
+    document.body.appendChild(atoast);
+    setTimeout(() => {
+        document.body.removeChild(atoast);
+    }, ms);
+}

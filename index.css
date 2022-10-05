@@ -130,3 +130,17 @@ tr:nth-child(even) td:nth-child(odd) {
 #reset {
     margin: 15px 0;
 }
+
+.toast {
+    text-align: center;
+    background-image: linear-gradient(rgb(73, 85, 80), #18214a);
+    border: 1px solid #00e4f08b;
+    color: white;
+    padding: 8px;
+    bottom: 20px;
+    left: 50%;
+    width: -50%;
+    position: fixed;
+    z-index: 10000;
+    transform: translateX(-50%);
+}
