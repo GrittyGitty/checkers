@@ -105,10 +105,10 @@ class BoardState {
         for (let row = 0; row < grid.length; row++) {
             for (let column = 0; column < grid[0].length; column++) {
                 let cellVal = grid[row][column];
-                let actualBoardCell = getActualCellReference(newTable, row, column);
-                actualBoardCell.classList.add(`piece-${pieces[grid[row][column]]}`);
+                let domCell = getDomCell(newTable, row, column);
+                domCell.classList.add(`piece-${pieces[grid[row][column]]}`);
                 if (cellVal < pieces.length - 1) {
-                    actualBoardCell.classList.add('tograb');
+                    domCell.classList.add('tograb');
                 }
             }
         }
@@ -139,8 +139,9 @@ class BoardState {
     }
 
     static handleMove(upRow, upColumn, downRow, downColumn) {
-        let startCell = state.grid[downRow][downColumn];
-        if (state.grid[upRow][upColumn] !== EMPTY_VALUE || startCell === EMPTY_VALUE || colorForCell(startCell) !== state.currentTurn || (upRow === -1 && upColumn === -1))
+        const startCell = state.grid[downRow][downColumn];
+        const finalCell = state.grid[upRow][upColumn];
+        if (finalCell !== EMPTY_VALUE || startCell === EMPTY_VALUE || colorForCell(startCell) !== state.currentTurn || (upRow === -1 && upColumn === -1))
             return state.updateUI();
         let flaggedCell = state.flaggedCell;
         if (flaggedCell !== undefined && ((downRow !== flaggedCell.row) || downColumn !== flaggedCell.column))
@@ -190,7 +191,8 @@ document.querySelector("#reset").addEventListener("click", () => {
 function mouseDownTable(event) {
     let { row: downRow, column: downColumn } = getIndicesForMouseCoordinates(event);
 
-    if (state.grid[downRow][downColumn] === EMPTY_VALUE)
+    const cellValue = state.grid[downRow][downColumn];
+    if (cellValue === EMPTY_VALUE)
         return;
 
     let trailDiv = document.getElementById("trailingDiv");
@@ -203,8 +205,8 @@ function mouseDownTable(event) {
         mainDiv.removeEventListener("mouseup", mouseup);
     });
 
-    let cell = getActualCellReference(state.table, downRow, downColumn);
-    trailDiv.className = cell.className.split(" ").find(cls => cls.startsWith("piece"));
+    let domCell = getDomCell(state.table, downRow, downColumn);
+    trailDiv.className = domCell.className.split(" ").find(cls => cls.startsWith("piece"));
     ({ width, height } = trailDiv.getBoundingClientRect());
     function pieceDrag(event) {
         //-------------Temporarily remove dragging piece for The Purposes Of Drag------------------
@@ -223,31 +225,40 @@ function mouseDownTable(event) {
 }
 
 function generateGridUpdatesForMoveIfLegal(grid, upRow, upColumn, downRow, downColumn) {
-    let updates = [];
     let startCell = grid[downRow][downColumn];
 
-    let notEatMoves = allLegalNonEatingMovesForCell(grid, downRow, downColumn);
-    let eatMoves = allLegalEatingMovesForCell(grid, downRow, downColumn);
+    const moves = allLogicalLegalMovesForCell(grid, downRow, downColumn, upRow, upColumn);
 
-    if (isThereAnEatingPossibilityForGivenColor(grid, colorForCell(grid[downRow][downColumn]))) {
-        for (let move of eatMoves) {
-            let finalCell = move.finalCell;
-            if (finalCell.row === upRow && finalCell.column === upColumn)
-                updates.push(...move.updates);
-        }
-    } else {
-        for (let move of notEatMoves) {
-            let finalCell = move.finalCell;
-            if (finalCell.row === upRow && finalCell.column === upColumn) {
-                updates.push(...move.updates);
-            }
-        }
-    }
+    const updates = moves.flatMap(({ updates }) => updates)
 
     if (((upRow === grid.length - 1) || (upRow === 0)) && updates.length > 0)
         updates.push(new GridUpdate(upRow, upColumn, pieces.indexOf(colorForCell(startCell) + "-" + "king")));
 
     return updates;
+}
+
+function allLogicalLegalMovesForCell(grid, downRow, downColumn, upRow, upColumn) {
+    let notEatMoves = allLegalNonEatingMovesForCell(grid, downRow, downColumn);
+    let eatMoves = allLegalEatingMovesForCell(grid, downRow, downColumn);
+
+    const moves = [];
+
+    if (isThereAnEatingPossibilityForGivenColor(grid, colorForCell(grid[downRow][downColumn]))) {
+        for (let move of eatMoves) {
+            let finalCell = move.finalCell;
+            if (finalCell.row === upRow && finalCell.column === upColumn)
+                moves.push(move);
+        }
+    } else {
+        for (let move of notEatMoves) {
+            let finalCell = move.finalCell;
+            if (finalCell.row === upRow && finalCell.column === upColumn) {
+                moves.push(move);
+            }
+        }
+    }
+
+    return moves;
 }
 
 function isThereAnEatingPossibilityForGivenColor(grid, color) {
@@ -327,10 +338,6 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
     return possibleMovings;
 }
 
-function allLegalMovesForCell(grid, startRow, startColumn) {
-    return allLegalEatingMovesForCell(grid, startRow, startColumn).concat(allLegalNonEatingMovesForCell(grid, startRow, startColumn))
-}
-
 
 function getIndicesForMouseCoordinates(event) {
     let tableParams = document.querySelector("#table").getBoundingClientRect();
@@ -366,8 +373,7 @@ function didColorLose(grid, color) {
 
 
 
-//not immutable!
-function getActualCellReference(table, row, column) {
+function getDomCell(table, row, column) {
     return table.rows[row].cells[column];
 }
 
