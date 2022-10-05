@@ -37,9 +37,9 @@ body {
 }
 
 table {
-background-color: rgb(240, 248, 255);
-border-collapse: collapse;
-box-shadow: 10px 10px 30px grey;
+    background-color: rgb(240, 248, 255);
+    border-collapse: collapse;
+    box-shadow: 10px 10px 30px grey;
 }
 
 td,
@@ -57,12 +57,32 @@ td,
     left: -1000px;
 }
 
-tr:nth-child(odd) td:nth-child(even), tr:nth-child(even) td:nth-child(odd){
+tr:nth-child(odd) td:nth-child(even),
+tr:nth-child(even) td:nth-child(odd) {
     background-color: rgb(60, 180, 217);
 }
 
 .tograb {
     cursor: grab
+}
+
+@keyframes flickerAnimation {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
+}
+
+.potential-move {
+    opacity: 0.4;
+    animation: flickerAnimation 0.75s infinite;
 }
 
 .tograb:active {
