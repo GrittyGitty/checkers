@@ -21,12 +21,12 @@ const defaultSetup = {
     `
 };
 
-const localStorageBackend = (()=>{
+const localStorageBackend = (() => {
     const STATE = "state";
     const getState = () => {
         try {
-           return JSON.parse(localStorage.getItem(STATE)) || defaultSetup;
-        } catch(ex) {
+            return JSON.parse(localStorage.getItem(STATE)) || defaultSetup;
+        } catch (ex) {
             return defaultSetup;
         }
     };
@@ -36,14 +36,14 @@ const localStorageBackend = (()=>{
 })();
 
 
-const store = (()=>{
+const store = (() => {
     const { getState, set, remove } = localStorageBackend;
     return {
-        get state () {
+        get state() {
             return getState()
         },
-        set state({grid, turn}){
-            set({grid, turn})
+        set state({ grid, turn }) {
+            set({ grid, turn })
         },
         reset: remove
     }
@@ -51,14 +51,14 @@ const store = (()=>{
 
 class GridUpdate {
     constructor(row, column, value = EMPTY_VALUE) {
-        this.indices = {row: row, column: column};
+        this.indices = { row: row, column: column };
         this.value = value;
     }
 
     static updateFactory(final, finalVal, ...remove) {
         let updates = [];
         updates.push(new GridUpdate(final.finalRow, final.finalColumn, finalVal));
-        remove.forEach(({indices}) => updates.push(new GridUpdate(indices.row, indices.column)));
+        remove.forEach(({ indices }) => updates.push(new GridUpdate(indices.row, indices.column)));
         return updates;
     }
 }
@@ -132,7 +132,7 @@ class BoardState {
 
     static computeGrid(grid, update) {
         let gridCopy = deepCopy2DArr(grid);
-        update.forEach(({indices: {row, column}, value}) => {
+        update.forEach(({ indices: { row, column }, value }) => {
             gridCopy[row][column] = value;
         });
         return gridCopy;
@@ -152,7 +152,7 @@ class BoardState {
             let isTheMoveAnEatMove = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("-")[1] !== "king") || (updates.length === 4),
                 canTheMovingPieceStillEat = (allLegalEatingMovesForCell(updatedState.grid, upRow, upColumn).length !== 0);
             state = (isTheMoveAnEatMove && canTheMovingPieceStillEat) ? // was eat, and there are more eating options for the same cell
-                updatedState.updateFlaggedCell({row: upRow, column: upColumn}) :
+                updatedState.updateFlaggedCell({ row: upRow, column: upColumn }) :
                 updatedState.updateFlaggedCell().updateCurrentTurn();
             if (didColorLose(state.grid, state.currentTurn)) {
                 alert(`${state.currentTurn} lost! :(`);
@@ -170,7 +170,7 @@ class BoardState {
     }
 
     serialize() {
-        const classToAlias = ["b","B","r","R","-"];
+        const classToAlias = ["b", "B", "r", "R", "-"];
         return {
             grid: this.grid.map((r) => {
                 return r.map((c) => classToAlias[c]).join("")
@@ -181,14 +181,14 @@ class BoardState {
 }
 
 let state = BoardState.startSession(store.state);
-document.querySelector("#reset").addEventListener("click", ()=> {
+document.querySelector("#reset").addEventListener("click", () => {
     state = BoardState.startSession(defaultSetup);
     store.reset();
 })
 
 
 function mouseDownTable(event) {
-    let {row: downRow, column: downColumn} = getIndicesForMouseCoordinates(event);
+    let { row: downRow, column: downColumn } = getIndicesForMouseCoordinates(event);
 
     if (state.grid[downRow][downColumn] === EMPTY_VALUE)
         return;
@@ -198,14 +198,14 @@ function mouseDownTable(event) {
     mainDiv.addEventListener("mousemove", pieceDrag);
     mainDiv.addEventListener("mouseup", function mouseup(event) {
         removeTrailingPiece(event);
-        let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(event);
+        let { row: upRow, column: upColumn } = getIndicesForMouseCoordinates(event);
         BoardState.handleMove(upRow, upColumn, downRow, downColumn);
         mainDiv.removeEventListener("mouseup", mouseup);
     });
 
     let cell = getActualCellReference(state.table, downRow, downColumn);
-    trailDiv.className = cell.className.split(" ").find(cls=>cls.startsWith("piece"));
-    ({width, height} = trailDiv.getBoundingClientRect());
+    trailDiv.className = cell.className.split(" ").find(cls => cls.startsWith("piece"));
+    ({ width, height } = trailDiv.getBoundingClientRect());
     function pieceDrag(event) {
         //-------------Temporarily remove dragging piece for The Purposes Of Drag------------------
         state.updateGrid([new GridUpdate(downRow, downColumn, EMPTY_VALUE)]).updateUI();
@@ -251,7 +251,7 @@ function generateGridUpdatesForMoveIfLegal(grid, upRow, upColumn, downRow, downC
 }
 
 function isThereAnEatingPossibilityForGivenColor(grid, color) {
-    return allCellsForColor(grid, color).some(({row, column}) => allLegalEatingMovesForCell(grid, row, column).length > 0);
+    return allCellsForColor(grid, color).some(({ row, column }) => allLegalEatingMovesForCell(grid, row, column).length > 0);
 }
 
 
@@ -285,7 +285,7 @@ function allLegalEatingMovesForCell(grid, startRow, startColumn) {
             if (finalCell === EMPTY_VALUE)
                 if (colorForCell(oneBefore) === BoardState.oppositeColor(colorForCell(startCell))) {
                     possibleEatings.push({
-                        finalCell: {row: finalRow, column: finalColumn},
+                        finalCell: { row: finalRow, column: finalColumn },
                         updates: GridUpdate.updateFactory({
                             finalRow,
                             finalColumn
@@ -316,7 +316,7 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
             let finalCell = grid[finalRow][finalColumn];
             if (finalCell === EMPTY_VALUE)
                 possibleMovings.push({
-                    finalCell: {row: finalRow, column: finalColumn},
+                    finalCell: { row: finalRow, column: finalColumn },
                     updates: GridUpdate.updateFactory({
                         finalRow,
                         finalColumn
@@ -327,8 +327,8 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
     return possibleMovings;
 }
 
-function allLegalMovesForCell(grid,startRow,startColumn){
-    return allLegalEatingMovesForCell(grid,startRow,startColumn).concat(allLegalNonEatingMovesForCell(grid, startRow, startColumn))
+function allLegalMovesForCell(grid, startRow, startColumn) {
+    return allLegalEatingMovesForCell(grid, startRow, startColumn).concat(allLegalNonEatingMovesForCell(grid, startRow, startColumn))
 }
 
 
@@ -340,7 +340,7 @@ function getIndicesForMouseCoordinates(event) {
         height = tableParams.height;
 
     if (x > width || y > height)
-        return {row: -1, column: -1};
+        return { row: -1, column: -1 };
     let rows = state.grid.length;
     let columns = state.grid[0].length;
     return {
@@ -354,14 +354,14 @@ function allCellsForColor(grid, color) {
     for (let row of Object.keys(grid)) {
         for (let column of Object.keys(grid[row])) {
             if (colorForCell(grid[row][column]) === color)
-                cells.push({row: Number(row), column: Number(column)});
+                cells.push({ row: Number(row), column: Number(column) });
         }
     }
     return cells;
 }
 
 function didColorLose(grid, color) {
-    return !allCellsForColor(grid, color).some(({row, column}) => allLegalEatingMovesForCell(grid, row, column).length > 0 || allLegalNonEatingMovesForCell(grid, row, column).length > 0);
+    return !allCellsForColor(grid, color).some(({ row, column }) => allLegalEatingMovesForCell(grid, row, column).length > 0 || allLegalNonEatingMovesForCell(grid, row, column).length > 0);
 }
 
 
@@ -387,5 +387,5 @@ function areColumnsOutOfBounds(...indices) {
 }
 
 function changeGridStringToNumbers(gridstring) {
-    return ["b", "B", "r", "R", "-"].reduce((grid, alias, i)=> grid.replaceAll(alias, i),gridstring)
+    return ["b", "B", "r", "R", "-"].reduce((grid, alias, i) => grid.replaceAll(alias, i), gridstring)
 }
