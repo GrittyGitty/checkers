@@ -190,6 +190,9 @@ document.querySelector("#reset").addEventListener("click", ()=> {
 function mouseDownTable(event) {
     let {row: downRow, column: downColumn} = getIndicesForMouseCoordinates(event);
 
+    if (state.grid[downRow][downColumn] === EMPTY_VALUE)
+        return;
+
     let trailDiv = document.getElementById("trailingDiv");
 
     mainDiv.addEventListener("mousemove", pieceDrag);
@@ -198,16 +201,13 @@ function mouseDownTable(event) {
         let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(event);
         BoardState.handleMove(upRow, upColumn, downRow, downColumn);
         mainDiv.removeEventListener("mouseup", mouseup);
-    }
-    );
+    });
 
     let cell = getActualCellReference(state.table, downRow, downColumn);
     trailDiv.className = cell.className.split(" ").find(cls=>cls.startsWith("piece"));
     ({width, height} = trailDiv.getBoundingClientRect());
     function pieceDrag(event) {
-        if (state.grid[downRow][downColumn] === EMPTY_VALUE)
-            return;
-        //-------------UI CHANGE: Only For The Purposes Of Drag------------------
+        //-------------Temporarily remove dragging piece for The Purposes Of Drag------------------
         state.updateGrid([new GridUpdate(downRow, downColumn, EMPTY_VALUE)]).updateUI();
         trailDiv.style.top = event.clientY - height / 2 + "px";
         trailDiv.style.left = event.clientX - width / 2 + "px";
@@ -325,6 +325,10 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
         }
     }
     return possibleMovings;
+}
+
+function allLegalMovesForCell(grid,startRow,startColumn){
+    return allLegalEatingMovesForCell(grid,startRow,startColumn).concat(allLegalNonEatingMovesForCell(grid, startRow, startColumn))
 }
 
 
