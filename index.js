@@ -4,7 +4,49 @@ const colors = ["black", "red"];
 let mainDiv = document.querySelector("#containerBoard");
 let trailDiv = document.querySelector("#trailingDiv");
 let turnDiv = document.querySelector("#turnDiv");
-let g=8;
+
+
+const defaultSetup = {
+    turn: "red",
+    grid: `
+    -b-b-b-b
+    b-b-b-b-
+    -b-b-b-b
+    --------
+    --------
+    r-r-r-r-
+    -r-r-r-r
+    r-r-r-r-
+    `
+};
+
+const localStorageBackend = (()=>{
+    const STATE = "state";
+    const getState = () => {
+        try {
+           return JSON.parse(localStorage.getItem(STATE)) || defaultSetup;
+        } catch(ex) {
+            return defaultSetup;
+        }
+    };
+    const set = (state) => localStorage.setItem(STATE, JSON.stringify(state));
+    const remove = () => localStorage.removeItem(STATE);
+    return { getState, set, remove };
+})();
+
+
+const store = (()=>{
+    const { getState, set, remove } = localStorageBackend;
+    return {
+        get state () {
+            return getState()
+        },
+        set state({grid, turn}){
+            set({grid, turn})
+        },
+        reset: remove
+    }
+})()
 
 class GridUpdate {
     constructor(row, column, value = pieceIndexForEmptyCell()) {
@@ -120,27 +162,19 @@ class BoardState {
             }
         }
         state.updateUI();
+        store.state = state.serialize();
     }
-    static initialSetup = `
-    -b-b-b-b
-    b-b-b-b-
-    -b-b-b-b
-    --------
-    --------
-    r-r-r-r-
-    -r-r-r-r
-    r-r-r-r-
-    `;
-    static init({ setup = this.initialSetup, turn = "red" } = {}) {
-        const regularBoardSetup = changeGridStringToNumbers(setup).trim().split("\n").map(r => r.trim());
-        const grid = new Array(regularBoardSetup.length).fill(new Array(regularBoardSetup[0].length).fill(0)).map((row, rIndex) => row.map((cell, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex))));
-        return new BoardState(grid, turn).updateUI()
+
+    static startSession({ grid, turn }) {
+        const regularBoardSetup = changeGridStringToNumbers(grid).trim().split("\n").map(r => r.trim());
+        const matrix = new Array(regularBoardSetup.length).fill(new Array(regularBoardSetup[0].length).fill(0)).map((row, rIndex) => row.map((cell, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex))));
+        return new BoardState(matrix, turn).updateUI()
     }
 
     serialize() {
         const classToAlias = ["b","B","r","R","-"];
         return {
-            gridString: this.grid.map((r) => {
+            grid: this.grid.map((r) => {
                 return r.map((c) => classToAlias[c]).join("")
             }).join("\n"),
             turn: this.currentTurn
@@ -148,17 +182,10 @@ class BoardState {
     }
 }
 
-const previousTurn = localStorage.getItem("turn");
-const previousGrid = localStorage.getItem("grid");
-let state = BoardState.init({ setup: previousGrid, turn: previousTurn });
-document.addEventListener("visibilitychange", () => {
-    const { gridString, turn } = state.serialize();
-    localStorage.setItem("grid", gridString)
-    localStorage.setItem("turn", turn)
-});
-
-document.querySelector("#reset").addEventListener("click", ()=>{
-    state = BoardState.init();
+let state = BoardState.startSession(store.state);
+document.querySelector("#reset").addEventListener("click", ()=> {
+    state = BoardState.startSession(defaultSetup);
+    store.reset();
 })
 
 
