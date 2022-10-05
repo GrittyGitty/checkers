@@ -5,6 +5,7 @@ let mainDiv = document.querySelector("#containerBoard");
 let trailDiv = document.querySelector("#trailingDiv");
 let turnDiv = document.querySelector("#turnDiv");
 
+const EMPTY_VALUE = pieces.length - 1;
 
 const defaultSetup = {
     turn: "red",
@@ -49,7 +50,7 @@ const store = (()=>{
 })()
 
 class GridUpdate {
-    constructor(row, column, value = pieceIndexForEmptyCell()) {
+    constructor(row, column, value = EMPTY_VALUE) {
         this.indices = {row: row, column: column};
         this.value = value;
     }
@@ -139,7 +140,7 @@ class BoardState {
 
     static handleMove(upRow, upColumn, downRow, downColumn) {
         let startCell = state.grid[downRow][downColumn];
-        if (state.grid[upRow][upColumn] !== pieceIndexForEmptyCell() || startCell === pieceIndexForEmptyCell() || colorForCell(startCell) !== state.currentTurn || (upRow === -1 && upColumn === -1))
+        if (state.grid[upRow][upColumn] !== EMPTY_VALUE || startCell === EMPTY_VALUE || colorForCell(startCell) !== state.currentTurn || (upRow === -1 && upColumn === -1))
             return state.updateUI();
         let flaggedCell = state.flaggedCell;
         if (flaggedCell !== undefined && ((downRow !== flaggedCell.row) || downColumn !== flaggedCell.column))
@@ -194,7 +195,7 @@ function mouseDownTable(event) {
     mainDiv.addEventListener("mousemove", pieceDrag);
     mainDiv.addEventListener("mouseup", function mouseup(event) {
         removeTrailingPiece(event);
-            let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(event);
+        let {row: upRow, column: upColumn} = getIndicesForMouseCoordinates(event);
         BoardState.handleMove(upRow, upColumn, downRow, downColumn);
         mainDiv.removeEventListener("mouseup", mouseup);
     }
@@ -202,12 +203,12 @@ function mouseDownTable(event) {
 
     let cell = getActualCellReference(state.table, downRow, downColumn);
     trailDiv.className = cell.className.split(" ").find(cls=>cls.startsWith("piece"));
+    ({width, height} = trailDiv.getBoundingClientRect());
     function pieceDrag(event) {
-        if (state.grid[downRow][downColumn] === pieceIndexForEmptyCell())
+        if (state.grid[downRow][downColumn] === EMPTY_VALUE)
             return;
-        ({width, height} = trailDiv.getBoundingClientRect());
         //-------------UI CHANGE: Only For The Purposes Of Drag------------------
-        state.updateGrid([new GridUpdate(downRow, downColumn, pieceIndexForEmptyCell())]).updateUI();
+        state.updateGrid([new GridUpdate(downRow, downColumn, EMPTY_VALUE)]).updateUI();
         trailDiv.style.top = event.clientY - height / 2 + "px";
         trailDiv.style.left = event.clientX - width / 2 + "px";
     }
@@ -255,7 +256,7 @@ function isThereAnEatingPossibilityForGivenColor(grid, color) {
 
 
 function colorForCell(gridVal) {
-    return gridVal !== pieceIndexForEmptyCell() ? pieces[gridVal].split("-")[0] : "empty";
+    return gridVal !== EMPTY_VALUE ? pieces[gridVal].split("-")[0] : "empty";
 }
 
 
@@ -265,7 +266,7 @@ function allLegalEatingMovesForCell(grid, startRow, startColumn) {
     let possibleEatings = [];
     let startCell = grid[startRow][startColumn];
 
-    if (startCell === pieceIndexForEmptyCell())
+    if (startCell === EMPTY_VALUE)
         return possibleEatings;
     const eatingDys = pieces[startCell].includes("king") ? possibleEatingDys : [possibleEatingDys[colors.indexOf(colorForCell(grid[startRow][startColumn]))]];
 
@@ -281,7 +282,7 @@ function allLegalEatingMovesForCell(grid, startRow, startColumn) {
 
             let oneBefore = grid[oneBeforeRow][oneBeforeColumn];
 
-            if (finalCell === pieceIndexForEmptyCell())
+            if (finalCell === EMPTY_VALUE)
                 if (colorForCell(oneBefore) === BoardState.oppositeColor(colorForCell(startCell))) {
                     possibleEatings.push({
                         finalCell: {row: finalRow, column: finalColumn},
@@ -303,7 +304,7 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
 
     let possibleMovings = [];
     let startCell = grid[startRow][startColumn];
-    if (startCell === pieceIndexForEmptyCell())
+    if (startCell === EMPTY_VALUE)
         return possibleMovings;
     const movingDys = pieces[startCell].includes("king") ? possibleMovingDys : [possibleMovingDys[colors.indexOf(colorForCell(grid[startRow][startColumn]))]];
 
@@ -313,7 +314,7 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
             if (areRowsOutOfBounds(finalRow) || areColumnsOutOfBounds(finalColumn))
                 continue;
             let finalCell = grid[finalRow][finalColumn];
-            if (finalCell === pieceIndexForEmptyCell())
+            if (finalCell === EMPTY_VALUE)
                 possibleMovings.push({
                     finalCell: {row: finalRow, column: finalColumn},
                     updates: GridUpdate.updateFactory({
@@ -360,9 +361,6 @@ function didColorLose(grid, color) {
 }
 
 
-function pieceIndexForEmptyCell() {
-    return pieces.length - 1;
-}
 
 //not immutable!
 function getActualCellReference(table, row, column) {
@@ -384,11 +382,7 @@ function areColumnsOutOfBounds(...indices) {
     return indices.some(column => column > state.grid[0].length || column < 0);
 }
 
+const aliases = ["b", "B", "r", "R", "-"];
 function changeGridStringToNumbers(gridstring) {
-    return gridstring
-        .replace(/-/g, `${pieceIndexForEmptyCell()}`)
-        .replace(/b/g, "0")
-        .replace(/B/g, "1")
-        .replace(/r/g, "2")
-        .replace(/R/g, "3");
+    aliases.reduce((grid, alias, i)=> grid.replace(alias, i),gridstring)
 }
