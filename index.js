@@ -382,7 +382,6 @@ function areColumnsOutOfBounds(...indices) {
     return indices.some(column => column > state.grid[0].length || column < 0);
 }
 
-const aliases = ["b", "B", "r", "R", "-"];
 function changeGridStringToNumbers(gridstring) {
-    aliases.reduce((grid, alias, i)=> grid.replace(alias, i),gridstring)
+    return ["b", "B", "r", "R", "-"].reduce((grid, alias, i)=> grid.replaceAll(alias, i),gridstring)
 }
