@@ -136,8 +136,8 @@ class BoardState {
                 updatedState.updateFlaggedCell({ row: finalRow, column: finalColumn }) :
                 updatedState.updateFlaggedCell().updateCurrentTurn();
             if (didColorLose(state.grid, state.currentTurn)) {
-                alert(`${state.currentTurn} lost! :(`);
-                location.reload();
+                toast(`${state.currentTurn} lost! :(`, 5000)
+                resetGame();
             }
         }
         state.updateUI();
@@ -431,15 +431,17 @@ const store = (() => {
 })()
 
 let state = BoardState.startSession(store.state);
-document.querySelector("#reset").addEventListener("click", () => {
-    state = BoardState.startSession(defaultSetup);
-    store.reset();
-})
+document.querySelector("#reset").addEventListener("click", resetGame)
 document.querySelector("#share").addEventListener("click", () => {
     navigator.clipboard.writeText(store.share).then(() => {
         toast("URL with game-state copied to clipboard! 🎆🎆🎆")
     })
 })
+
+function resetGame() {
+    state = BoardState.startSession(defaultSetup);
+    store.reset();
+};
 
 function toast(text, ms = 2000) {
     const atoast = document.createElement('div');
