@@ -370,7 +370,7 @@ const storageBackend = (() => {
     const STATE = "state";
     const GRID = "grid";
     const TURN = "turn";
-    const { pathname, origin } = window.location;
+    const { pathname, href } = window.location;
 
 
     const fromLocalStorage = () => {
@@ -406,7 +406,7 @@ const storageBackend = (() => {
         const { grid, turn } = fetch();
         params.set(GRID, grid);
         params.set(TURN, turn);
-        return `${origin}?${params.toString()}`;
+        return `${window.location.href.split('?')[0]}?${params.toString()}`;
     }
 
     return { fetch, persist, reset, compileSharingUrl };
