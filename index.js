@@ -138,22 +138,22 @@ class BoardState {
         return gridCopy;
     }
 
-    static handleMove(upRow, upColumn, downRow, downColumn) {
-        const startCell = state.grid[downRow][downColumn];
-        const finalCell = state.grid[upRow][upColumn];
-        if (finalCell !== EMPTY_VALUE || startCell === EMPTY_VALUE || colorForCell(startCell) !== state.currentTurn || (upRow === -1 && upColumn === -1))
+    static handleMove(finalRow, finalColumn, startRow, startColumn) {
+        const startCell = state.grid[startRow][startColumn];
+        const finalCell = state.grid[finalRow][finalColumn];
+        if (finalCell !== EMPTY_VALUE || startCell === EMPTY_VALUE || colorForCell(startCell) !== state.currentTurn || (finalRow === -1 && finalColumn === -1))
             return state.updateUI();
         let flaggedCell = state.flaggedCell;
-        if (flaggedCell !== undefined && ((downRow !== flaggedCell.row) || downColumn !== flaggedCell.column))
+        if (flaggedCell !== undefined && ((startRow !== flaggedCell.row) || startColumn !== flaggedCell.column))
             return state.updateUI();
 
-        let updates = [...generateGridUpdatesForMoveIfLegal(state.grid, upRow, upColumn, downRow, downColumn)];
+        let updates = [...generateGridUpdatesForMoveIfLegal(state.grid, finalRow, finalColumn, startRow, startColumn)];
         if (updates.length !== 0) { //was legal move...
             let updatedState = state.updateGrid(updates);
             let isTheMoveAnEatMove = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("-")[1] !== "king") || (updates.length === 4),
-                canTheMovingPieceStillEat = (allLegalEatingMovesForCell(updatedState.grid, upRow, upColumn).length !== 0);
+                canTheMovingPieceStillEat = (allLegalEatingMovesForCell(updatedState.grid, finalRow, finalColumn).length !== 0);
             state = (isTheMoveAnEatMove && canTheMovingPieceStillEat) ? // was eat, and there are more eating options for the same cell
-                updatedState.updateFlaggedCell({ row: upRow, column: upColumn }) :
+                updatedState.updateFlaggedCell({ row: finalRow, column: finalColumn }) :
                 updatedState.updateFlaggedCell().updateCurrentTurn();
             if (didColorLose(state.grid, state.currentTurn)) {
                 alert(`${state.currentTurn} lost! :(`);
@@ -189,9 +189,9 @@ document.querySelector("#reset").addEventListener("click", () => {
 
 
 function mouseDownTable(event) {
-    let { row: downRow, column: downColumn } = getIndicesForMouseCoordinates(event);
+    let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(event);
 
-    const cellValue = state.grid[downRow][downColumn];
+    const cellValue = state.grid[startRow][startColumn];
     if (cellValue === EMPTY_VALUE)
         return;
 
@@ -200,17 +200,17 @@ function mouseDownTable(event) {
     mainDiv.addEventListener("mousemove", pieceDrag);
     mainDiv.addEventListener("mouseup", function mouseup(event) {
         removeTrailingPiece(event);
-        let { row: upRow, column: upColumn } = getIndicesForMouseCoordinates(event);
-        BoardState.handleMove(upRow, upColumn, downRow, downColumn);
+        let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(event);
+        BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
         mainDiv.removeEventListener("mouseup", mouseup);
     });
 
-    let domCell = getDomCell(state.table, downRow, downColumn);
+    let domCell = getDomCell(state.table, startRow, startColumn);
     trailDiv.className = domCell.className.split(" ").find(cls => cls.startsWith("piece"));
     ({ width, height } = trailDiv.getBoundingClientRect());
     function pieceDrag(event) {
         //-------------Temporarily remove dragging piece for The Purposes Of Drag------------------
-        state.updateGrid([new GridUpdate(downRow, downColumn, EMPTY_VALUE)]).updateUI();
+        state.updateGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI();
         trailDiv.style.top = event.clientY - height / 2 + "px";
         trailDiv.style.left = event.clientX - width / 2 + "px";
     }
@@ -224,35 +224,35 @@ function mouseDownTable(event) {
     }
 }
 
-function generateGridUpdatesForMoveIfLegal(grid, upRow, upColumn, downRow, downColumn) {
-    let startCell = grid[downRow][downColumn];
+function generateGridUpdatesForMoveIfLegal(grid, finalRow, finalColumn, startRow, startColumn) {
+    let startCell = grid[startRow][startColumn];
 
-    const moves = allLogicalLegalMovesForCell(grid, downRow, downColumn, upRow, upColumn);
+    const moves = allLogicalLegalMovesForCell(grid, startRow, startColumn, finalRow, finalColumn);
 
     const updates = moves.flatMap(({ updates }) => updates)
 
-    if (((upRow === grid.length - 1) || (upRow === 0)) && updates.length > 0)
-        updates.push(new GridUpdate(upRow, upColumn, pieces.indexOf(colorForCell(startCell) + "-" + "king")));
+    if (((finalRow === grid.length - 1) || (finalRow === 0)) && updates.length > 0)
+        updates.push(new GridUpdate(finalRow, finalColumn, pieces.indexOf(colorForCell(startCell) + "-" + "king")));
 
     return updates;
 }
 
-function allLogicalLegalMovesForCell(grid, downRow, downColumn, upRow, upColumn) {
-    let notEatMoves = allLegalNonEatingMovesForCell(grid, downRow, downColumn);
-    let eatMoves = allLegalEatingMovesForCell(grid, downRow, downColumn);
+function allLogicalLegalMovesForCell(grid, startRow, startColumn, finalRow, finalColumn) {
+    let notEatMoves = allLegalNonEatingMovesForCell(grid, startRow, startColumn);
+    let eatMoves = allLegalEatingMovesForCell(grid, startRow, startColumn);
 
     const moves = [];
 
-    if (isThereAnEatingPossibilityForGivenColor(grid, colorForCell(grid[downRow][downColumn]))) {
+    if (isThereAnEatingPossibilityForGivenColor(grid, colorForCell(grid[startRow][startColumn]))) {
         for (let move of eatMoves) {
-            let finalCell = move.finalCell;
-            if (finalCell.row === upRow && finalCell.column === upColumn)
+            const { finalCell } = move;
+            if (finalCell.row === finalRow && finalCell.column === finalColumn)
                 moves.push(move);
         }
     } else {
         for (let move of notEatMoves) {
             let finalCell = move.finalCell;
-            if (finalCell.row === upRow && finalCell.column === upColumn) {
+            if (finalCell.row === finalRow && finalCell.column === finalColumn) {
                 moves.push(move);
             }
         }
