@@ -121,9 +121,6 @@ class BoardState {
             var row = document.createElement("tr");
             for (let j = 0; j < columns; j++) {
                 var cell = document.createElement("td");
-                if ((i + j) % 2 !== 0) {
-                    cell.className = "colored";
-                }
                 row.appendChild(cell);
             }
             table.appendChild(row);

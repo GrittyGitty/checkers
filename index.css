@@ -57,8 +57,7 @@ td,
     left: -1000px;
 }
 
-
-.colored {
+tr:nth-child(odd) td:nth-child(even), tr:nth-child(even) td:nth-child(odd){
     background-color: rgb(60, 180, 217);
 }
 
