@@ -21,33 +21,8 @@ const defaultSetup = {
     `
 };
 
-const localStorageBackend = (() => {
-    const STATE = "state";
-    const getState = () => {
-        try {
-            return JSON.parse(localStorage.getItem(STATE)) || defaultSetup;
-        } catch (ex) {
-            return defaultSetup;
-        }
-    };
-    const set = (state) => localStorage.setItem(STATE, JSON.stringify(state));
-    const remove = () => localStorage.removeItem(STATE);
-    return { getState, set, remove };
-})();
 
 
-const store = (() => {
-    const { getState, set, remove } = localStorageBackend;
-    return {
-        get state() {
-            return getState()
-        },
-        set state({ grid, turn }) {
-            set({ grid, turn })
-        },
-        reset: remove
-    }
-})()
 
 class GridUpdate {
     constructor(row, column, value = EMPTY_VALUE) {
@@ -185,13 +160,6 @@ class BoardState {
         }
     }
 }
-
-let state = BoardState.startSession(store.state);
-document.querySelector("#reset").addEventListener("click", () => {
-    state = BoardState.startSession(defaultSetup);
-    store.reset();
-})
-
 
 function mouseDownTable(event) {
     let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(event);
@@ -393,3 +361,73 @@ function areColumnsOutOfBounds(...indices) {
 function changeGridStringToNumbers(gridstring) {
     return ["b", "B", "r", "R", "-"].reduce((grid, alias, i) => grid.replaceAll(alias, i), gridstring)
 }
+
+
+
+
+
+const storageBackend = (() => {
+    const STATE = "state";
+    const GRID = "grid";
+    const TURN = "turn";
+    const path = window.location.pathname;
+
+    const fromLocalStorage = () => {
+        try {
+            return JSON.parse(localStorage.getItem(STATE));
+        } catch (ex) {
+            return;
+        }
+    };
+    const fromParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const grid = urlParams.get(GRID);
+        const turn = urlParams.get(TURN);
+        return grid ? { grid, turn } : undefined;
+    }
+
+    const fetch = () => (window.location.search ? fromParams() : fromLocalStorage()) || defaultSetup;
+
+    const persist = ({ grid, turn } = defaultSetup) => {
+        const params = new URLSearchParams();
+        params.set(GRID, grid);
+        params.set(TURN, turn);
+        history.pushState(null, '', `${path}?${params.toString()}`);
+        localStorage.setItem(STATE, JSON.stringify({ grid, turn }))
+    };
+    const reset = () => {
+        history.pushState(null, '', path);
+        localStorage.removeItem(STATE);
+    };
+
+    function compileSharingUrl() {
+        const params = new URLSearchParams();
+        const { grid, turn } = fetch();
+        params.set(GRID, grid);
+        params.set(TURN, turn);
+        return `${path}?${params.toString()}`;
+    }
+
+    return { fetch, persist, reset, compileSharingUrl };
+})();
+
+// MAIN:
+
+const store = (() => {
+    const { fetch, persist, reset } = storageBackend;
+    return {
+        get state() {
+            return fetch()
+        },
+        set state({ grid, turn }) {
+            persist({ grid, turn })
+        },
+        reset
+    }
+})()
+
+let state = BoardState.startSession(store.state);
+document.querySelector("#reset").addEventListener("click", () => {
+    state = BoardState.startSession(defaultSetup);
+    store.reset();
+})
