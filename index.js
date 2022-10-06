@@ -114,7 +114,7 @@ const dom = (() => {
         }
     }
 
-    const { left, top, width, height } = table.getBoundingClientRect();
+    let { left, top, width, height } = table.getBoundingClientRect();
     function getIndicesForMouseCoordinates(event) {
         let subtractFromX = left + window.pageXOffset;
         let subtractFromY = top + window.pageYOffset;
@@ -141,7 +141,7 @@ const dom = (() => {
     }
 
     table.addEventListener("mousedown", mouseDownTable);
-
+    window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
     return {
         updateUI({ grid, turn, potentialMoves }) {
             turnDiv.style.backgroundColor = turn;
