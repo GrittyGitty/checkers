@@ -2,9 +2,8 @@ const pieces = ["black", "black-king", "red", "red-king", "empty"];
 const colors = ["black", "red"];
 
 const clsx = (...classes) => {
-    const strings = classes.slice(-2);
-    const bag = Object.entries(classes[classes.length - 1]).filter(([, v]) => Boolean(v)).map(([cls]) => cls);
-    return [...strings, ...bag].join(" ");
+    const bag = Object.entries(classes.pop()).filter(([, v]) => Boolean(v)).map(([cls]) => cls);
+    return [...classes, ...bag].join(" ");
 }
 
 const EMPTY_VALUE = pieces.length - 1;
@@ -40,6 +39,14 @@ class GridUpdate {
     }
 }
 
+function forEach(cb) {
+    for (let row = 0; row < 8; row++) {
+        for (let column = 0; column < 8; column++) {
+            cb(row, column);
+        }
+    }
+}
+
 
 const dom = (() => {
     const table = document.getElementById("table");
@@ -51,26 +58,22 @@ const dom = (() => {
 
     const getDomCell = (row, column) => table.rows[row].cells[column];
 
-    const createIsPotentialMove = (potentialMoves) => {
-        const moveSet = new Set(potentialMoves.map(({ row, column }) => `${row},${column}`));
+    const createCellInListChecker = (list) => {
+        const moveSet = new Set(list.map(({ row, column }) => `${row},${column}`));
         return (row, column) => moveSet.has(`${row},${column}`);
     }
 
-    const forEachCell = (cb) => {
-        for (let row = 0; row < 8; row++) {
-            for (let column = 0; column < 8; column++) {
-                cb({ row, column, domCell: getDomCell(row, column) });
-            }
-        }
-    }
+    const forEachCell = (cb) => forEach((row, column) => cb({ row, column, domCell: getDomCell(row, column) }))
 
-    const renderClasses = (grid, potentialMoves) => {
-        const isPotentialMove = createIsPotentialMove(potentialMoves);
+    const renderClasses = (grid, { potentialMoves, piecesThatCanMove }) => {
+        const isPotentialMove = createCellInListChecker(potentialMoves);
+        const canMove = createCellInListChecker(piecesThatCanMove)
         forEachCell(({ row, column, domCell }) => {
             const cellVal = grid[row][column];
             const newValue = clsx(`piece-${pieces[cellVal]}`, {
                 tograb: cellVal !== EMPTY_VALUE,
-                "potential-move": isPotentialMove(row, column)
+                "potential-move": isPotentialMove(row, column),
+                "can-move": canMove(row, column)
             });
             if (domCell.className !== newValue)
                 domCell.className = newValue;
@@ -143,9 +146,9 @@ const dom = (() => {
     table.addEventListener("mousedown", mouseDownTable);
     window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
     return {
-        updateUI({ grid, turn, potentialMoves }) {
+        updateUI({ grid, turn, potentialMoves, piecesThatCanMove }) {
             turnDiv.style.backgroundColor = turn;
-            renderClasses(grid, potentialMoves);
+            renderClasses(grid, { potentialMoves, piecesThatCanMove });
         },
         registerShare(cb) {
             share.addEventListener("click", cb)
@@ -167,6 +170,7 @@ class BoardState {
         this.grid = grid;
         this.currentTurn = turnColor;
         this.flaggedCell = flaggedCell;
+        this.piecesThatCanMove = this.getPiecesThatCanMove();
     }
 
     updatedGrid(updates) {
@@ -183,13 +187,17 @@ class BoardState {
         return new BoardState(grid, BoardState.oppositeColor(this.currentTurn));
     }
 
+    getPiecesThatCanMove() {
+        return allCellsForColor(this.grid, this.currentTurn).filter(({ row, column }) => this.getPotentialMoves(row, column).length);
+    }
+
     updateUI(potentialMoves = []) {
-        dom.updateUI({ grid: this.grid, turn: this.currentTurn, potentialMoves });
+        dom.updateUI({ grid: this.grid, turn: this.currentTurn, potentialMoves, piecesThatCanMove: this.piecesThatCanMove });
         return this;
     }
 
     getPotentialMoves(startRow, startColumn) {
-        return allLogicalLegalMovesForCell(this.grid, { startRow, startColumn }).map(({ finalCell }) => finalCell)
+        return allLogicalLegalMovesForCell(this, { startRow, startColumn }).map(({ finalCell }) => finalCell)
     }
 
     static oppositeColor(color) {
@@ -209,7 +217,7 @@ class BoardState {
         if (finalCell !== EMPTY_VALUE || (finalRow === -1 && finalColumn === -1))
             return state.updateUI();
 
-        let updates = generateGridUpdatesForMoveIfLegal(state.grid, { finalRow, finalColumn, startRow, startColumn });
+        let updates = generateGridUpdatesForMoveIfLegal(state, { finalRow, finalColumn, startRow, startColumn });
         if (updates.length > 0) { //was legal move...
             let updatedState = state.updatedGrid(updates);
             let isTheMoveAnEatMove = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("-")[1] !== "king") || (updates.length === 4),
@@ -243,25 +251,24 @@ class BoardState {
     }
 }
 
-function generateGridUpdatesForMoveIfLegal(grid, { finalRow, finalColumn, startRow, startColumn }) {
-    const logicalMoves = allLogicalLegalMovesForCell(grid, { startRow, startColumn });
+function generateGridUpdatesForMoveIfLegal(state, { finalRow, finalColumn, startRow, startColumn }) {
+    const logicalMoves = allLogicalLegalMovesForCell(state, { startRow, startColumn });
     const specificMove = logicalMoves.find((({ finalCell }) => finalCell.row === finalRow && finalCell.column === finalColumn))
     if (!specificMove) return [];
 
     const { updates } = specificMove;
 
-    if (((finalRow === grid.length - 1) || (finalRow === 0)) && updates.length > 0)
-        updates.push(new GridUpdate(finalRow, finalColumn, pieces.indexOf(colorForCell(grid[startRow][startColumn]) + "-" + "king")));
+    if (((finalRow === state.grid.length - 1) || (finalRow === 0)) && updates.length > 0)
+        updates.push(new GridUpdate(finalRow, finalColumn, pieces.indexOf(colorForCell(state.grid[startRow][startColumn]) + "-" + "king")));
 
     return updates;
 }
 
-function allLogicalLegalMovesForCell(grid, { startRow, startColumn }) {
-    const startCell = state.grid[startRow][startColumn];
-    const { flaggedCell } = state;
+function allLogicalLegalMovesForCell({ grid, flaggedCell, currentTurn }, { startRow, startColumn }) {
+    const startCell = grid[startRow][startColumn];
     if (
         startCell === EMPTY_VALUE ||
-        colorForCell(startCell) !== state.currentTurn ||
+        colorForCell(startCell) !== currentTurn ||
         (startRow === flaggedCell?.row && startColumn === flaggedCell?.column)
     )
         return [];
@@ -317,7 +324,6 @@ function allLegalEatingMovesForCell(grid, startRow, startColumn) {
     return possibleEatings;
 }
 
-
 function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
     const possibleMovingDys = [1, -1];
     const movingDxs = [1, -1];
@@ -347,16 +353,12 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
     return possibleMovings;
 }
 
-
-
 function allCellsForColor(grid, color) {
-    let cells = [];
-    for (let row of Object.keys(grid)) {
-        for (let column of Object.keys(grid[row])) {
-            if (colorForCell(grid[row][column]) === color)
-                cells.push({ row: Number(row), column: Number(column) });
-        }
-    }
+    const cells = [];
+    forEach((row, column) => {
+        if (colorForCell(grid[row][column]) === color)
+            cells.push({ row, column })
+    })
     return cells;
 }
 
@@ -364,29 +366,20 @@ function didColorLose(grid, color) {
     return !allCellsForColor(grid, color).some(({ row, column }) => allLegalEatingMovesForCell(grid, row, column).length > 0 || allLegalNonEatingMovesForCell(grid, row, column).length > 0);
 }
 
-
-
-function deepCopy2DArr(arr) {
-    return arr.map(
-        (row, rIndex) => row.map((column, cIndex) => column));
-}
+const deepCopy2DArr = (arr) => arr.map((r) => r.map((c) => c));
 
 
 function areRowsOutOfBounds(...indices) {
-    return indices.some(row => row > state.grid.length - 1 || row < 0);
+    return indices.some(row => row >= 8 || row < 0);
 }
 
 function areColumnsOutOfBounds(...indices) {
-    return indices.some(column => column > state.grid[0].length || column < 0);
+    return indices.some(column => column >= 8 || column < 0);
 }
 
 function changeGridStringToNumbers(gridstring) {
     return ["b", "B", "r", "R", "-"].reduce((grid, alias, i) => grid.replaceAll(alias, i), gridstring)
 }
-
-
-
-
 
 const storageBackend = (() => {
     const STATE = "state";
