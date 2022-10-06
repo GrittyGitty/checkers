@@ -55,18 +55,26 @@ const dom = (() => {
         const moveSet = new Set(potentialMoves.map(({ row, column }) => `${row},${column}`));
         return (row, column) => moveSet.has(`${row},${column}`);
     }
-    const get_table_for_grid = (grid, potentialMoves) => {
-        const isPotentialMove = createIsPotentialMove(potentialMoves);
+
+    const forEachCell = (cb) => {
         for (let row = 0; row < 8; row++) {
             for (let column = 0; column < 8; column++) {
-                const cellVal = grid[row][column];
-                const domCell = getDomCell(row, column);
-                domCell.className = clsx(`piece-${pieces[grid[row][column]]}`, {
-                    tograb: cellVal !== EMPTY_VALUE,
-                    "potential-move": isPotentialMove(row, column)
-                })
+                cb({ row, column, domCell: getDomCell(row, column) });
             }
         }
+    }
+
+    const renderClasses = (grid, potentialMoves) => {
+        const isPotentialMove = createIsPotentialMove(potentialMoves);
+        forEachCell(({ row, column, domCell }) => {
+            const cellVal = grid[row][column];
+            const newValue = clsx(`piece-${pieces[cellVal]}`, {
+                tograb: cellVal !== EMPTY_VALUE,
+                "potential-move": isPotentialMove(row, column)
+            });
+            if (domCell.className !== newValue)
+                domCell.className = newValue;
+        })
     }
 
     function mouseDownTable(mouseDown) {
@@ -87,7 +95,7 @@ const dom = (() => {
         const domCell = getDomCell(startRow, startColumn);
         trailDiv.className = domCell.className.split(" ").find(cls => cls.startsWith("piece"));
         const { width, height } = trailDiv.getBoundingClientRect();
-        const potentialMoves = allLogicalLegalMovesForCell(state.grid, { startRow, startColumn }).map(({ finalCell }) => finalCell);
+        const potentialMoves = state.getPotentialMoves(startRow, startColumn);
         //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
         state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(potentialMoves);
         trailDiv.style.top = mouseDown.clientY - height / 2 + "px";
@@ -137,13 +145,18 @@ const dom = (() => {
     return {
         updateUI({ grid, turn, potentialMoves }) {
             turnDiv.style.backgroundColor = turn;
-            get_table_for_grid(grid, potentialMoves);
+            renderClasses(grid, potentialMoves);
         },
         registerShare(cb) {
             share.addEventListener("click", cb)
         },
         registerReset(cb) {
             reset.addEventListener("click", cb)
+        },
+        registerHover(highlightHovered) {
+            forEachCell(({ domCell, row, column }) => {
+                domCell.addEventListener("mouseover", () => highlightHovered(row, column))
+            })
         },
         toast
     };
@@ -175,6 +188,9 @@ class BoardState {
         return this;
     }
 
+    getPotentialMoves(startRow, startColumn) {
+        return allLogicalLegalMovesForCell(this.grid, { startRow, startColumn }).map(({ finalCell }) => finalCell)
+    }
 
     static oppositeColor(color) {
         return color === colors[0] ? colors[1] : colors[0];
@@ -447,4 +463,6 @@ dom.registerReset(() => {
     state = BoardState.startSession(defaultSetup);
     store.reset();
 })
+dom.registerHover((row, column) => state.updateUI(state.getPotentialMoves(row, column)))
+
 let state = BoardState.startSession(store.state);
