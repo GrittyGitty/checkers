@@ -85,6 +85,10 @@ tr:nth-child(even) td:nth-child(odd) {
     animation: flickerAnimation 0.75s infinite;
 }
 
+.can-move {
+    filter: drop-shadow(2px 2px 2px rgb(1, 5, 15));
+}
+
 .tograb:active {
     cursor: grabbing;
     opacity: 80%;

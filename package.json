@@ -1,0 +1,19 @@
+{
+  "name": "checkers",
+  "version": "1.0.0",
+  "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch index.js --exec 'uglifyjs index.js -cmo index.min.js --source-map url=index.min.js.map'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/netanel-haber/checkers.git"
+  },
+  "author": "Netanel Haber",
+  "homepage": "https://github.com/netanel-haber/checkers#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "uglify-js": "^3.17.3"
+  }
+}

@@ -63,6 +63,8 @@ const dom = (() => {
         return (row, column) => moveSet.has(`${row},${column}`);
     }
 
+    let dragging = false;
+
     const forEachCell = (cb) => forEach((row, column) => cb({ row, column, domCell: getDomCell(row, column) }))
 
     const renderClasses = (grid, { potentialMoves, piecesThatCanMove }) => {
@@ -73,7 +75,7 @@ const dom = (() => {
             const newValue = clsx(`piece-${pieces[cellVal]}`, {
                 tograb: cellVal !== EMPTY_VALUE,
                 "potential-move": isPotentialMove(row, column),
-                "can-move": canMove(row, column)
+                "can-move": canMove(row, column) && !dragging
             });
             if (domCell.className !== newValue)
                 domCell.className = newValue;
@@ -81,6 +83,7 @@ const dom = (() => {
     }
 
     function mouseDownTable(mouseDown) {
+        dragging = true;
         let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(mouseDown);
 
         const cellValue = state.grid[startRow][startColumn];
@@ -109,6 +112,7 @@ const dom = (() => {
         }
 
         function endDrag() {
+            dragging = false;
             state.updateUI();
             mainDiv.removeEventListener("mousemove", pieceDrag);
             trailDiv.style.backgroundImage = "";
@@ -445,17 +449,17 @@ const store = (() => {
 
 
 
-
+function resetGame() {
+    state = BoardState.startSession(defaultSetup);
+    store.reset();
+}
 // MAIN:
 dom.registerShare(() => {
     navigator.clipboard.writeText(store.share).then(() => {
         dom.toast("URL with game-state copied to clipboard! 🎆🎆🎆")
     })
 })
-dom.registerReset(() => {
-    state = BoardState.startSession(defaultSetup);
-    store.reset();
-})
+dom.registerReset(resetGame);
 dom.registerHover((row, column) => state.updateUI(state.getPotentialMoves(row, column)))
 
 let state = BoardState.startSession(store.state);
