@@ -1,9 +1,11 @@
 const pieces = ["black", "black-king", "red", "red-king", "empty"];
 const colors = ["black", "red"];
 
-let mainDiv = document.querySelector("#containerBoard");
-let trailDiv = document.querySelector("#trailingDiv");
-let turnDiv = document.querySelector("#turnDiv");
+const clsx = (...classes) => {
+    const strings = classes.slice(-2);
+    const bag = Object.entries(classes[classes.length - 1]).filter(([, v]) => Boolean(v)).map(([cls]) => cls);
+    return [...strings, ...bag].join(" ");
+}
 
 const EMPTY_VALUE = pieces.length - 1;
 
@@ -39,16 +41,122 @@ class GridUpdate {
 }
 
 
+const dom = (() => {
+    const table = document.getElementById("table");
+    const turnDiv = document.getElementById("turnDiv");
+    const trailDiv = document.getElementById("trailingDiv");
+    const mainDiv = document.getElementById("containerBoard");
+    const reset = document.getElementById("reset");
+    const share = document.getElementById("share");
+
+    const getDomCell = (row, column) => table.rows[row].cells[column];
+
+    const createIsPotentialMove = (potentialMoves) => {
+        const moveSet = new Set(potentialMoves.map(({ row, column }) => `${row},${column}`));
+        return (row, column) => moveSet.has(`${row},${column}`);
+    }
+    const get_table_for_grid = (grid, potentialMoves) => {
+        const isPotentialMove = createIsPotentialMove(potentialMoves);
+        for (let row = 0; row < 8; row++) {
+            for (let column = 0; column < 8; column++) {
+                const cellVal = grid[row][column];
+                const domCell = getDomCell(row, column);
+                domCell.className = clsx(`piece-${pieces[grid[row][column]]}`, {
+                    tograb: cellVal !== EMPTY_VALUE,
+                    "potential-move": isPotentialMove(row, column)
+                })
+            }
+        }
+    }
+
+    function mouseDownTable(mouseDown) {
+        let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(mouseDown);
+
+        const cellValue = state.grid[startRow][startColumn];
+        if (cellValue === EMPTY_VALUE)
+            return;
+
+        mainDiv.addEventListener("mousemove", pieceDrag);
+        mainDiv.addEventListener("mouseup", function mouseup(mouseUp) {
+            endDrag();
+            let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(mouseUp);
+            BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
+            mainDiv.removeEventListener("mouseup", mouseup);
+        });
+
+        const domCell = getDomCell(startRow, startColumn);
+        trailDiv.className = domCell.className.split(" ").find(cls => cls.startsWith("piece"));
+        const { width, height } = trailDiv.getBoundingClientRect();
+        const potentialMoves = allLogicalLegalMovesForCell(state.grid, { startRow, startColumn }).map(({ finalCell }) => finalCell);
+        //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
+        state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(potentialMoves);
+        trailDiv.style.top = mouseDown.clientY - height / 2 + "px";
+        trailDiv.style.left = mouseDown.clientX - width / 2 + "px";
+        function pieceDrag(mouseMove) {
+            trailDiv.style.top = mouseMove.clientY - height / 2 + "px";
+            trailDiv.style.left = mouseMove.clientX - width / 2 + "px";
+        }
+
+        function endDrag() {
+            state.updateUI();
+            mainDiv.removeEventListener("mousemove", pieceDrag);
+            trailDiv.style.backgroundImage = "";
+            trailDiv.style.top = "-1000px";
+            trailDiv.style.left = "-1000px";
+        }
+    }
+
+    const { left, top, width, height } = table.getBoundingClientRect();
+    function getIndicesForMouseCoordinates(event) {
+        let subtractFromX = left + window.pageXOffset;
+        let subtractFromY = top + window.pageYOffset;
+        let x = event.clientX - subtractFromX, y = event.clientY - subtractFromY;
+
+        if (x > width || y > height)
+            return { row: -1, column: -1 };
+        let rows = state.grid.length;
+        let columns = state.grid[0].length;
+        return {
+            row: Math.floor((y / height) * rows),
+            column: Math.floor((x / width) * columns)
+        };
+    }
+
+    function toast(text, ms = 2000) {
+        const atoast = document.createElement('div');
+        atoast.classList.add("toast")
+        atoast.innerText = text;
+        document.body.appendChild(atoast);
+        setTimeout(() => {
+            document.body.removeChild(atoast);
+        }, ms);
+    }
+
+    table.addEventListener("mousedown", mouseDownTable);
+
+    return {
+        updateUI({ grid, turn, potentialMoves }) {
+            turnDiv.style.backgroundColor = turn;
+            get_table_for_grid(grid, potentialMoves);
+        },
+        registerShare(cb) {
+            share.addEventListener("click", cb)
+        },
+        registerReset(cb) {
+            reset.addEventListener("click", cb)
+        },
+        toast
+    };
+})();
+
 class BoardState {
     constructor(grid, turnColor, { flaggedCell } = {}) {
         this.grid = grid;
         this.currentTurn = turnColor;
-        this.table = BoardState.getTableForGrid(grid);
-        this.table.addEventListener("mousedown", (event) => mouseDownTable(event));
         this.flaggedCell = flaggedCell;
     }
 
-    updateGrid(updates) {
+    updatedGrid(updates) {
         let newGrid = BoardState.computeGrid(this.grid, updates);
         return new BoardState(newGrid, this.currentTurn);
     }
@@ -57,61 +165,19 @@ class BoardState {
         return new BoardState(this.grid, this.currentTurn, { flagged });
     }
 
-    updatePotentialMoves(potentialMoves = []) {
-        return new BoardState(this.grid, this.currentTurn, { potentialMoves }).updateUI()
-    }
-
     updateCurrentTurn() {
         let grid = this.grid;
         return new BoardState(grid, BoardState.oppositeColor(this.currentTurn));
     }
 
-    updateUI(potentialMoves) {
-        let currentUITable = mainDiv.querySelector("table");
-        if (currentUITable !== null) currentUITable.remove();
-        if (!potentialMoves?.length) {
-            [...this.table.querySelectorAll(".potential-move")].forEach(el => el.classList.remove("potential-move"))
-        } else {
-            potentialMoves.forEach(({ row, column }) => getDomCell(this.table, row, column).classList.add("potential-move"))
-        }
-        mainDiv.insertBefore(this.table, mainDiv.childNodes[0]);
-        turnDiv.style.backgroundColor = this.currentTurn;
+    updateUI(potentialMoves = []) {
+        dom.updateUI({ grid: this.grid, turn: this.currentTurn, potentialMoves });
         return this;
     }
 
 
     static oppositeColor(color) {
         return color === colors[0] ? colors[1] : colors[0];
-    }
-
-    static getTableForGrid(grid) {
-        let newTable = BoardState.createTable(grid.length, grid[0].length);
-        for (let row = 0; row < grid.length; row++) {
-            for (let column = 0; column < grid[0].length; column++) {
-                let cellVal = grid[row][column];
-                let domCell = getDomCell(newTable, row, column);
-                domCell.classList.add(`piece-${pieces[grid[row][column]]}`);
-                if (cellVal !== EMPTY_VALUE) {
-                    domCell.classList.add('tograb');
-                }
-            }
-        }
-        return newTable;
-    }
-
-
-    static createTable(rows, columns) {
-        var table = document.createElement("table");
-        for (let i = 0; i < rows; i++) {
-            var row = document.createElement("tr");
-            for (let j = 0; j < columns; j++) {
-                var cell = document.createElement("td");
-                row.appendChild(cell);
-            }
-            table.appendChild(row);
-        }
-        table.id = "table";
-        return table;
     }
 
     static computeGrid(grid, update) {
@@ -129,14 +195,14 @@ class BoardState {
 
         let updates = generateGridUpdatesForMoveIfLegal(state.grid, { finalRow, finalColumn, startRow, startColumn });
         if (updates.length > 0) { //was legal move...
-            let updatedState = state.updateGrid(updates);
+            let updatedState = state.updatedGrid(updates);
             let isTheMoveAnEatMove = (updates.length === 3 && pieces[updates[updates.length - 1].value].split("-")[1] !== "king") || (updates.length === 4),
                 canTheMovingPieceStillEat = (allLegalEatingMovesForCell(updatedState.grid, finalRow, finalColumn).length !== 0);
             state = (isTheMoveAnEatMove && canTheMovingPieceStillEat) ? // was eat, and there are more eating options for the same cell
                 updatedState.updateFlaggedCell({ row: finalRow, column: finalColumn }) :
                 updatedState.updateFlaggedCell().updateCurrentTurn();
             if (didColorLose(state.grid, state.currentTurn)) {
-                toast(`${state.currentTurn} lost! :(`, 5000)
+                dom.toast(`${state.currentTurn} lost! :(`, 5000)
                 resetGame();
             }
         }
@@ -158,45 +224,6 @@ class BoardState {
             }).join("\n"),
             turn: this.currentTurn
         }
-    }
-}
-
-function mouseDownTable(event) {
-    let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(event);
-
-    const cellValue = state.grid[startRow][startColumn];
-    if (cellValue === EMPTY_VALUE)
-        return;
-
-    let trailDiv = document.getElementById("trailingDiv");
-
-    mainDiv.addEventListener("mousemove", pieceDrag);
-    mainDiv.addEventListener("mouseup", function mouseup(event) {
-        endDrag();
-        let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(event);
-        BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
-        mainDiv.removeEventListener("mouseup", mouseup);
-    });
-
-    let domCell = getDomCell(state.table, startRow, startColumn);
-    trailDiv.className = domCell.className.split(" ").find(cls => cls.startsWith("piece"));
-    ({ width, height } = trailDiv.getBoundingClientRect());
-    const potentialMoves = allLogicalLegalMovesForCell(state.grid, { startRow, startColumn }).map(({ finalCell }) => finalCell);
-    state.updateUI(potentialMoves);
-    function pieceDrag(event) {
-        //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
-        state.updateGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(potentialMoves);
-        trailDiv.style.top = event.clientY - height / 2 + "px";
-        trailDiv.style.left = event.clientX - width / 2 + "px";
-    }
-
-
-    function endDrag() {
-        state.updateUI();
-        mainDiv.removeEventListener("mousemove", pieceDrag);
-        trailDiv.style.backgroundImage = "";
-        trailDiv.style.top = "-1000px";
-        trailDiv.style.left = "-1000px";
     }
 }
 
@@ -305,22 +332,6 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
 }
 
 
-function getIndicesForMouseCoordinates(event) {
-    let tableParams = document.querySelector("#table").getBoundingClientRect();
-    let subtractFromX = tableParams.left + window.pageXOffset;
-    let subtractFromY = tableParams.top + window.pageYOffset;
-    let x = event.clientX - subtractFromX, y = event.clientY - subtractFromY, width = tableParams.width,
-        height = tableParams.height;
-
-    if (x > width || y > height)
-        return { row: -1, column: -1 };
-    let rows = state.grid.length;
-    let columns = state.grid[0].length;
-    return {
-        row: Math.floor((y / height) * rows),
-        column: Math.floor((x / width) * columns)
-    };
-}
 
 function allCellsForColor(grid, color) {
     let cells = [];
@@ -337,11 +348,6 @@ function didColorLose(grid, color) {
     return !allCellsForColor(grid, color).some(({ row, column }) => allLegalEatingMovesForCell(grid, row, column).length > 0 || allLegalNonEatingMovesForCell(grid, row, column).length > 0);
 }
 
-
-
-function getDomCell(table, row, column) {
-    return table.rows[row].cells[column];
-}
 
 
 function deepCopy2DArr(arr) {
@@ -406,13 +412,11 @@ const storageBackend = (() => {
         const { grid, turn } = fetch();
         params.set(GRID, grid);
         params.set(TURN, turn);
-        return `${window.location.href.split('?')[0]}?${params.toString()}`;
+        return `${href.split('?')[0]}?${params.toString()}`;
     }
 
     return { fetch, persist, reset, compileSharingUrl };
 })();
-
-// MAIN:
 
 const store = (() => {
     const { fetch, persist, reset, compileSharingUrl } = storageBackend;
@@ -430,25 +434,17 @@ const store = (() => {
     }
 })()
 
-let state = BoardState.startSession(store.state);
-document.querySelector("#reset").addEventListener("click", resetGame)
-document.querySelector("#share").addEventListener("click", () => {
+
+
+
+// MAIN:
+dom.registerShare(() => {
     navigator.clipboard.writeText(store.share).then(() => {
-        toast("URL with game-state copied to clipboard! 🎆🎆🎆")
+        dom.toast("URL with game-state copied to clipboard! 🎆🎆🎆")
     })
 })
-
-function resetGame() {
+dom.registerReset(() => {
     state = BoardState.startSession(defaultSetup);
     store.reset();
-};
-
-function toast(text, ms = 2000) {
-    const atoast = document.createElement('div');
-    atoast.classList.add("toast")
-    atoast.innerText = text;
-    document.body.appendChild(atoast);
-    setTimeout(() => {
-        document.body.removeChild(atoast);
-    }, ms);
-}
+})
+let state = BoardState.startSession(store.state);
