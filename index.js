@@ -85,12 +85,13 @@ const dom = (() => {
     }
 
     function mouseDownTable(mouseDown) {
-        dragging = true;
         let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(mouseDown);
 
         const cellValue = state.grid[startRow][startColumn];
         if (cellValue === EMPTY_VALUE)
             return;
+
+        dragging = true;
 
         mainDiv.addEventListener("mousemove", pieceDrag);
         mainDiv.addEventListener("mouseup", function mouseup(mouseUp) {
