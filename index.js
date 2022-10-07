@@ -25,6 +25,7 @@ b-b-b-b-
 };
 
 
+const stack = [];
 
 
 class GridUpdate {
@@ -57,6 +58,12 @@ const dom = (() => {
     const mainDiv = document.getElementById("containerBoard");
     const reset = document.getElementById("reset");
     const share = document.getElementById("share");
+    const undo = document.getElementById("undo");
+
+    const [click, mousemove, mouseup, mousedown, mouseover] =
+        ["click", "mousemove", "mouseup", "mousedown", "mouseover"].map(
+            e => (el, cb) => el.addEventListener(e, cb)
+        );
 
     const LEGAL_TARGET = "legal-target";
     const CAN_MOVE = "can-move";
@@ -88,7 +95,8 @@ const dom = (() => {
         })
     }
 
-    function mouseDownTable(mouseDown) {
+    mousedown(table, startDrag);
+    function startDrag(mouseDown) {
         let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(mouseDown);
 
         const classSet = new Set(getDomCell(startRow, startColumn).classList);
@@ -98,13 +106,8 @@ const dom = (() => {
 
         dragging = true;
 
-        mainDiv.addEventListener("mousemove", pieceDrag);
-        mainDiv.addEventListener("mouseup", function mouseup(mouseUp) {
-            endDrag();
-            let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(mouseUp);
-            BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
-            mainDiv.removeEventListener("mouseup", mouseup);
-        });
+        mousemove(mainDiv, drag);
+        mouseup(mainDiv, endDrag);
 
         trailDiv.className = pieceClasses.find(cellHas);
         const { width, height } = trailDiv.getBoundingClientRect();
@@ -113,18 +116,20 @@ const dom = (() => {
         state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(legalTargets);
         trailDiv.style.top = mouseDown.clientY - height / 2 + "px";
         trailDiv.style.left = mouseDown.clientX - width / 2 + "px";
-        function pieceDrag(mouseMove) {
+        function drag(mouseMove) {
             trailDiv.style.top = mouseMove.clientY - height / 2 + "px";
             trailDiv.style.left = mouseMove.clientX - width / 2 + "px";
         }
 
-        function endDrag() {
-            dragging = false;
-            state.updateUI();
-            mainDiv.removeEventListener("mousemove", pieceDrag);
+        function endDrag(e) {
+            mainDiv.removeEventListener("mousemove", drag);
+            mainDiv.removeEventListener("mouseup", endDrag);
             trailDiv.style.backgroundImage = "";
             trailDiv.style.top = "-1000px";
             trailDiv.style.left = "-1000px";
+            dragging = false;
+            let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(e);
+            BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
         }
     }
 
@@ -152,22 +157,18 @@ const dom = (() => {
         }, ms);
     }
 
-    table.addEventListener("mousedown", mouseDownTable);
     window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
     return {
         updateUI({ grid, turn, legalTargets, piecesThatCanMove }) {
             turnDiv.style.backgroundColor = turn;
             renderClasses(grid, { legalTargets, piecesThatCanMove });
         },
-        registerShare(cb) {
-            share.addEventListener("click", cb)
-        },
-        registerReset(cb) {
-            reset.addEventListener("click", cb)
-        },
+        registerShare: cb => click(share, cb),
+        registerUndo: cb => click(undo, cb),
+        registerReset: cb => click(reset, cb),
         registerHover(highlightHovered) {
             forEachCell(({ domCell, row, column }) => {
-                domCell.addEventListener("mouseover", () => highlightHovered(row, column))
+                mouseover(domCell, () => highlightHovered(row, column))
             })
         },
         toast
@@ -240,7 +241,9 @@ class BoardState {
             }
         }
         state.updateUI();
-        store.state = state.serialize();
+        const serialized = state.serialize();
+        store.state = serialized;
+        stack.push(serialized);
     }
 
     static startSession({ grid, turn }) {
