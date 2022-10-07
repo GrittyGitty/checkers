@@ -122,18 +122,16 @@ const dom = (() => {
     }
 
     let { left, top, width, height } = table.getBoundingClientRect();
-    function getIndicesForMouseCoordinates(event) {
-        let subtractFromX = left + window.pageXOffset;
-        let subtractFromY = top + window.pageYOffset;
-        let x = event.clientX - subtractFromX, y = event.clientY - subtractFromY;
+    function getIndicesForMouseCoordinates({ clientX, clientY }) {
+        const subtractFromX = left + window.pageXOffset;
+        const subtractFromY = top + window.pageYOffset;
+        const x = clientX - subtractFromX, y = clientY - subtractFromY;
 
         if (x > width || y > height)
             return { row: -1, column: -1 };
-        let rows = state.grid.length;
-        let columns = state.grid[0].length;
         return {
-            row: Math.floor((y / height) * rows),
-            column: Math.floor((x / width) * columns)
+            row: Math.floor((y / height) * 8),
+            column: Math.floor((x / width) * 8)
         };
     }
 
@@ -262,7 +260,7 @@ function generateGridUpdatesForMoveIfLegal(state, { finalRow, finalColumn, start
 
     const { updates } = specificMove;
 
-    if (((finalRow === state.grid.length - 1) || (finalRow === 0)) && updates.length > 0)
+    if (((finalRow === 7) || (finalRow === 0)) && updates.length > 0)
         updates.push(new GridUpdate(finalRow, finalColumn, pieces.indexOf(colorForCell(state.grid[startRow][startColumn]) + "-" + "king")));
 
     return updates;
