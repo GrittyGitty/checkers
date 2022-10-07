@@ -1,24 +1,26 @@
 const pieces = ["black", "black-king", "red", "red-king", "empty"];
+const movingDys = [[-1], [-1, 1], [1], [-1, 1]];
+const eatingDys = movingDys.map((dirs) => dirs.map((d) => d * 2));
 const colors = ["black", "red"];
+const EMPTY_VALUE = pieces.length - 1;
 
 const clsx = (...classes) => {
     const bag = Object.entries(classes.pop()).filter(([, v]) => Boolean(v)).map(([cls]) => cls);
     return [...classes, ...bag].join(" ");
 }
 
-const EMPTY_VALUE = pieces.length - 1;
 
 const defaultSetup = {
-    turn: "red",
+    turn: "black",
     grid: `
--b-b-b-b
-b-b-b-b-
--b-b-b-b
---------
---------
-r-r-r-r-
 -r-r-r-r
 r-r-r-r-
+-r-r-r-r
+--------
+--------
+b-b-b-b-
+-b-b-b-b
+b-b-b-b-
 `.trim().split("\n").filter(Boolean).join("\n")
 };
 
@@ -290,16 +292,14 @@ function colorForCell(gridVal) {
 
 
 function allLegalEatingMovesForCell(grid, startRow, startColumn) {
-    const possibleEatingDys = [2, -2];
     const eatingDxs = [2, -2];
     let possibleEatings = [];
     let startCell = grid[startRow][startColumn];
 
     if (startCell === EMPTY_VALUE)
         return possibleEatings;
-    const eatingDys = pieces[startCell].includes("king") ? possibleEatingDys : [possibleEatingDys[colors.indexOf(colorForCell(grid[startRow][startColumn]))]];
 
-    for (let dy of eatingDys) {
+    for (let dy of eatingDys[startCell]) {
         for (let dx of eatingDxs) {
             let finalRow = startRow + dy, finalColumn = startColumn + dx;
             if (areRowsOutOfBounds(finalRow) || areColumnsOutOfBounds(finalColumn))
@@ -327,16 +327,14 @@ function allLegalEatingMovesForCell(grid, startRow, startColumn) {
 }
 
 function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
-    const possibleMovingDys = [1, -1];
     const movingDxs = [1, -1];
 
     let possibleMovings = [];
     let startCell = grid[startRow][startColumn];
     if (startCell === EMPTY_VALUE)
         return possibleMovings;
-    const movingDys = pieces[startCell].includes("king") ? possibleMovingDys : [possibleMovingDys[colors.indexOf(colorForCell(grid[startRow][startColumn]))]];
 
-    for (let dy of movingDys) {
+    for (let dy of movingDys[startCell]) {
         for (let dx of movingDxs) {
             let finalRow = startRow + dy, finalColumn = startColumn + dx;
             if (areRowsOutOfBounds(finalRow) || areColumnsOutOfBounds(finalColumn))
