@@ -62,9 +62,6 @@ tr:nth-child(even) td:nth-child(odd) {
     background-color: rgb(60, 180, 217);
 }
 
-.tograb {
-    cursor: grab
-}
 
 @keyframes flickerAnimation {
     0% {
@@ -80,16 +77,17 @@ tr:nth-child(even) td:nth-child(odd) {
     }
 }
 
-.potential-move {
+.legal-target {
     opacity: 0.4;
     animation: flickerAnimation 0.75s infinite;
 }
 
 .can-move {
     filter: drop-shadow(2px 2px 2px rgb(1, 5, 15));
+    cursor: grab;
 }
 
-.tograb:active {
+.can-move:active {
     cursor: grabbing;
     opacity: 80%;
 }

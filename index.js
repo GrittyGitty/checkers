@@ -58,6 +58,11 @@ const dom = (() => {
     const reset = document.getElementById("reset");
     const share = document.getElementById("share");
 
+    const LEGAL_TARGET = "legal-target";
+    const CAN_MOVE = "can-move";
+    const pieceClasses = pieces.map((_, i) => `piece-${pieces[i]}`);
+    const EMPTY_PIECE = pieceClasses[EMPTY_VALUE];
+
     const getDomCell = (row, column) => table.rows[row].cells[column];
 
     const createCellInListChecker = (list) => {
@@ -69,15 +74,14 @@ const dom = (() => {
 
     const forEachCell = (cb) => forEach((row, column) => cb({ row, column, domCell: getDomCell(row, column) }))
 
-    const renderClasses = (grid, { potentialMoves, piecesThatCanMove }) => {
-        const isPotentialMove = createCellInListChecker(potentialMoves);
+    const renderClasses = (grid, { legalTargets, piecesThatCanMove }) => {
+        const isLegalTargetForHoveredCell = createCellInListChecker(legalTargets);
         const canMove = createCellInListChecker(piecesThatCanMove)
         forEachCell(({ row, column, domCell }) => {
             const cellVal = grid[row][column];
-            const newValue = clsx(`piece-${pieces[cellVal]}`, {
-                tograb: cellVal !== EMPTY_VALUE,
-                "potential-move": isPotentialMove(row, column),
-                "can-move": canMove(row, column) && !dragging
+            const newValue = clsx(pieceClasses[cellVal], {
+                [LEGAL_TARGET]: isLegalTargetForHoveredCell(row, column),
+                [CAN_MOVE]: canMove(row, column) && !dragging
             });
             if (domCell.className !== newValue)
                 domCell.className = newValue;
@@ -87,8 +91,9 @@ const dom = (() => {
     function mouseDownTable(mouseDown) {
         let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates(mouseDown);
 
-        const cellValue = state.grid[startRow][startColumn];
-        if (cellValue === EMPTY_VALUE)
+        const classSet = new Set(getDomCell(startRow, startColumn).classList);
+        const cellHas = classSet.has.bind(classSet);
+        if (!cellHas(CAN_MOVE) || cellHas(EMPTY_PIECE))
             return;
 
         dragging = true;
@@ -101,12 +106,11 @@ const dom = (() => {
             mainDiv.removeEventListener("mouseup", mouseup);
         });
 
-        const domCell = getDomCell(startRow, startColumn);
-        trailDiv.className = domCell.className.split(" ").find(cls => cls.startsWith("piece"));
+        trailDiv.className = pieceClasses.find(cellHas);
         const { width, height } = trailDiv.getBoundingClientRect();
-        const potentialMoves = state.getPotentialMoves(startRow, startColumn);
+        const legalTargets = state.getLegalTargets(startRow, startColumn);
         //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
-        state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(potentialMoves);
+        state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(legalTargets);
         trailDiv.style.top = mouseDown.clientY - height / 2 + "px";
         trailDiv.style.left = mouseDown.clientX - width / 2 + "px";
         function pieceDrag(mouseMove) {
@@ -151,9 +155,9 @@ const dom = (() => {
     table.addEventListener("mousedown", mouseDownTable);
     window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
     return {
-        updateUI({ grid, turn, potentialMoves, piecesThatCanMove }) {
+        updateUI({ grid, turn, legalTargets, piecesThatCanMove }) {
             turnDiv.style.backgroundColor = turn;
-            renderClasses(grid, { potentialMoves, piecesThatCanMove });
+            renderClasses(grid, { legalTargets, piecesThatCanMove });
         },
         registerShare(cb) {
             share.addEventListener("click", cb)
@@ -193,15 +197,15 @@ class BoardState {
     }
 
     getPiecesThatCanMove() {
-        return allCellsForColor(this.grid, this.currentTurn).filter(({ row, column }) => this.getPotentialMoves(row, column).length);
+        return allCellsForColor(this.grid, this.currentTurn).filter(({ row, column }) => this.getLegalTargets(row, column).length);
     }
 
-    updateUI(potentialMoves = []) {
-        dom.updateUI({ grid: this.grid, turn: this.currentTurn, potentialMoves, piecesThatCanMove: this.piecesThatCanMove });
+    updateUI(legalTargets = []) {
+        dom.updateUI({ grid: this.grid, turn: this.currentTurn, legalTargets, piecesThatCanMove: this.piecesThatCanMove });
         return this;
     }
 
-    getPotentialMoves(startRow, startColumn) {
+    getLegalTargets(startRow, startColumn) {
         return allLogicalLegalMovesForCell(this, { startRow, startColumn }).map(({ finalCell }) => finalCell)
     }
 
@@ -457,6 +461,6 @@ dom.registerShare(() => {
     })
 })
 dom.registerReset(resetGame);
-dom.registerHover((row, column) => state.updateUI(state.getPotentialMoves(row, column)))
+dom.registerHover((row, column) => state.updateUI(state.getLegalTargets(row, column)))
 
 let state = BoardState.startSession(store.state);
