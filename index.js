@@ -25,7 +25,6 @@ b-b-b-b-
 };
 
 
-const stack = [];
 
 
 class GridUpdate {
@@ -52,13 +51,16 @@ function forEach(cb) {
 
 
 const dom = (() => {
-    const table = document.getElementById("table");
-    const turnDiv = document.getElementById("turnDiv");
-    const trailDiv = document.getElementById("trailingDiv");
-    const mainDiv = document.getElementById("containerBoard");
-    const reset = document.getElementById("reset");
-    const share = document.getElementById("share");
-    const undo = document.getElementById("undo");
+    const $ = (id) => document.getElementById(id);
+
+    const table = $("table");
+    const turnDiv = $("turnDiv");
+    const trailDiv = $("trailingDiv");
+    const mainDiv = $("containerBoard");
+    const reset = $("reset");
+    const share = $("share");
+    const undo = $("undo");
+    const redo = $("redo");
 
     const [click, mousemove, mouseup, mousedown, mouseover] =
         ["click", "mousemove", "mouseup", "mousedown", "mouseover"].map(
@@ -82,6 +84,8 @@ const dom = (() => {
     const forEachCell = (cb) => forEach((row, column) => cb({ row, column, domCell: getDomCell(row, column) }))
 
     const renderClasses = (grid, { legalTargets, piecesThatCanMove }) => {
+        undo.disabled = idx === 0;
+        redo.disabled = idx === stack.length - 1;
         const isLegalTargetForHoveredCell = createCellInListChecker(legalTargets);
         const canMove = createCellInListChecker(piecesThatCanMove)
         forEachCell(({ row, column, domCell }) => {
@@ -164,7 +168,10 @@ const dom = (() => {
             renderClasses(grid, { legalTargets, piecesThatCanMove });
         },
         registerShare: cb => click(share, cb),
-        registerUndo: cb => click(undo, cb),
+        registerUndo: (undoCb, redoCb) => {
+            click(undo, undoCb);
+            click(redo, redoCb);
+        },
         registerReset: cb => click(reset, cb),
         registerHover(highlightHovered) {
             forEachCell(({ domCell, row, column }) => {
@@ -243,7 +250,8 @@ class BoardState {
         state.updateUI();
         const serialized = state.serialize();
         store.state = serialized;
-        stack.push(serialized);
+        stack[++idx] = serialized;
+        stack.splice(idx + 1);
     }
 
     static startSession({ grid, turn }) {
@@ -455,6 +463,8 @@ const store = (() => {
 
 function resetGame() {
     state = BoardState.startSession(defaultSetup);
+    stack = [defaultSetup];
+    idx = 0;
     store.reset();
 }
 // MAIN:
@@ -466,4 +476,16 @@ dom.registerShare(() => {
 dom.registerReset(resetGame);
 dom.registerHover((row, column) => state.updateUI(state.getLegalTargets(row, column)))
 
+dom.registerUndo(
+    () => {
+        state = BoardState.startSession(stack[--idx]);
+        store.state = state.serialize();
+    },
+    () => {
+        state = BoardState.startSession(stack[++idx]);
+        store.state = state.serialize();
+    }
+);
+let stack = [store.state];
+let idx = 0;
 let state = BoardState.startSession(store.state);

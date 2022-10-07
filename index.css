@@ -129,9 +129,6 @@ tr:nth-child(even) td:nth-child(odd) {
     background-image: url("./assets/red-king.png");
 }
 
-#reset {
-    margin: 15px 0;
-}
 
 .toast {
     text-align: center;
@@ -145,4 +142,17 @@ tr:nth-child(even) td:nth-child(odd) {
     position: fixed;
     z-index: 10000;
     transform: translateX(-50%);
+}
+
+.buttons {
+    padding: 20px;
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 150px;
+}
+
+.buttons button {
+    flex: 1;
 }
