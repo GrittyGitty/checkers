@@ -81,16 +81,16 @@ td,
   height: var(--cellsize);
 }
 .piece-black {
-  background-image: url("./dist/assets/black.png");
+  background-image: url("./assets/black.png");
 }
 .piece-black-king {
-  background-image: url("./dist/assets/black-king.png");
+  background-image: url("./assets/black-king.png");
 }
 .piece-red {
-  background-image: url("./dist/assets/red.png");
+  background-image: url("./assets/red.png");
 }
 .piece-red-king {
-  background-image: url("./dist/assets/red-king.png");
+  background-image: url("./assets/red-king.png");
 }
 .toast {
   text-align: center;
