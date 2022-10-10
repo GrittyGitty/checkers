@@ -4,7 +4,7 @@
   "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "main": "index.js",
   "scripts": {
-    "dev": "live-server . & nodemon --watch index.js --watch index.less --exec 'uglifyjs index.js -cmo index.min.js --source-map url=index.min.js.map && lessc index.less dist/index.css'"
+    "dev": "live-server . & nodemon --watch index.js --watch index.less --exec 'uglifyjs index.js -cmo dist/index.min.js --source-map url=index.min.js.map && lessc index.less dist/index.css'"
   },
   "repository": {
     "type": "git",
