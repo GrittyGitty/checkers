@@ -10,6 +10,10 @@ body {
   height: 100%;
   margin: auto;
   background-image: linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
+  position: relative;
+}
+html,
+body {
   overflow: hidden;
 }
 #turnDiv {
