@@ -71,7 +71,7 @@ const dom = (() => {
     const CAN_MOVE = "can-move";
     const pieceClasses = pieces.map((_, i) => `piece-${pieces[i]}`);
     const EMPTY_PIECE = pieceClasses[EMPTY_VALUE];
-
+    const colorToClass = Object.fromEntries(colors.map((c) => [c, `piece-${c}`]));
     const getDomCell = (row, column) => table.rows[row].cells[column];
 
     const createCellInListChecker = (list) => {
@@ -83,7 +83,8 @@ const dom = (() => {
 
     const forEachCell = (cb) => forEach((row, column) => cb({ row, column, domCell: getDomCell(row, column) }))
 
-    const renderClasses = (grid, { legalTargets, piecesThatCanMove }) => {
+    const renderClasses = (grid, { legalTargets, piecesThatCanMove, turn }) => {
+        turnDiv.className = colorToClass[turn];
         undo.disabled = idx === 0;
         redo.disabled = idx === stack.length - 1;
         const isLegalTargetForHoveredCell = createCellInListChecker(legalTargets);
@@ -164,8 +165,7 @@ const dom = (() => {
     window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
     return {
         updateUI({ grid, turn, legalTargets, piecesThatCanMove }) {
-            turnDiv.style.backgroundColor = turn;
-            renderClasses(grid, { legalTargets, piecesThatCanMove });
+            renderClasses(grid, { legalTargets, piecesThatCanMove, turn });
         },
         registerShare: cb => click(share, cb),
         registerUndo: (undoCb, redoCb) => {
