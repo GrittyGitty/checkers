@@ -62,8 +62,8 @@ const dom = (() => {
     const undo = $("undo");
     const redo = $("redo");
 
-    const [click, mousemove, mouseup, mousedown, mouseover] =
-        ["click", "mousemove", "mouseup", "mousedown", "mouseover"].map(
+    const [click, mousemove, mouseup, mousedown, mouseover, keydown] =
+        ["click", "mousemove", "mouseup", "mousedown", "mouseover", "keydown"].map(
             e => (el, cb) => el.addEventListener(e, cb)
         );
 
@@ -171,6 +171,10 @@ const dom = (() => {
         registerUndo: (undoCb, redoCb) => {
             click(undo, undoCb);
             click(redo, redoCb);
+            keydown(window, ({ key }) => {
+                if (key === "ArrowLeft" && !undo.disabled) undoCb();
+                if (key === "ArrowRight" && !redo.disabled) redoCb();
+            });
         },
         registerReset: cb => click(reset, cb),
         registerHover(highlightHovered) {
