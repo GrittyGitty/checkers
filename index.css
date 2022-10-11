@@ -88,17 +88,17 @@ tr:nth-child(even) td:nth-child(odd) {
 .can-move {
     filter: drop-shadow(2px 2px 2px rgb(1, 5, 15));
     cursor: grab;
+}
 
-    &:active {
-        cursor: grabbing;
-        opacity: 80%;
-    }
+.can-move:active {
+    cursor: grabbing;
+    opacity: 80%;
 }
 
 td,
 #trailingDiv,
 #turnDiv {
-    --cellsize: min(10vmin, 67px);
+    --cellsize: min(var(--short), 67px);
     width: var(--cellsize);
     height: var(--cellsize);
 }
@@ -141,10 +141,10 @@ td,
     flex-wrap: wrap;
     gap: 6px;
     width: 150px;
+}
 
-    button {
-        flex: 1;
-        width: 72px;
-        height: 53px;
-    }
+.buttons button {
+    flex: 1;
+    width: 72px;
+    height: 53px;
 }

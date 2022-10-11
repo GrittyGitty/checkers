@@ -12,6 +12,14 @@
     <link rel="prefetch" as="image" href="./dist/assets/black.png" />
     <link rel="prefetch" as="image" href="./dist/assets/red-king.png" />
     <link rel="prefetch" as="image" href="./dist/assets/black-king.png" />
+    <script>
+        function set() {
+            let short_tenth = Math.min(window.innerHeight, window.innerWidth) * 0.1;
+            document.documentElement.style.setProperty('--short', `${short_tenth}px`);
+        }
+        set();
+        window.addEventListener("resize", set);
+    </script>
     <script defer src="./dist/index.min.js"></script>
 </head>
 
