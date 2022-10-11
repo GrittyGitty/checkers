@@ -14,8 +14,8 @@
     <link rel="prefetch" as="image" href="./dist/assets/black-king.png" />
     <script>
         function set() {
-            let short_tenth = Math.min(window.innerHeight, window.innerWidth) * 0.1;
-            document.documentElement.style.setProperty('--short', `${short_tenth}px`);
+            let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.08, 67);
+            document.documentElement.style.setProperty('--cellsize', `${cell_size}px`);
         }
         set();
         window.addEventListener("resize", set);

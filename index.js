@@ -119,7 +119,7 @@ const dom = (() => {
         dragging = true;
 
         mainDiv.addEventListener(moveEvent, drag);
-        mainDiv.addEventListener(endEvent, endDrag);
+        mainDiv.addEventListener(endEvent, endDrag, { once: true });
 
 
         trailDiv.className = pieceClasses.find(cellHas);
@@ -137,7 +137,6 @@ const dom = (() => {
 
         function endDrag(end) {
             mainDiv.removeEventListener(moveEvent, drag);
-            mainDiv.removeEventListener(endEvent, endDrag);
             trailDiv.style.backgroundImage = "";
             trailDiv.style.top = "-1000px";
             trailDiv.style.left = "-1000px";
