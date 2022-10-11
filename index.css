@@ -15,11 +15,6 @@ body {
     position: relative;
 }
 
-html,
-body {
-    overflow: hidden;
-}
-
 #turnDiv {
     margin: auto;
     margin-top: 10px;
@@ -48,6 +43,7 @@ table {
     background-color: rgb(240, 248, 255);
     border-collapse: collapse;
     box-shadow: 10px 10px 30px grey;
+    touch-action: none;
 }
 
 [class^=piece] {
