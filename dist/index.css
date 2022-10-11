@@ -81,7 +81,7 @@ tr:nth-child(even) td:nth-child(odd) {
 td,
 #trailingDiv,
 #turnDiv {
-  --cellsize: min(10vw, 67px);
+  --cellsize: min(10vmin, 67px);
   width: var(--cellsize);
   height: var(--cellsize);
 }
