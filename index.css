@@ -59,8 +59,9 @@ table {
 #trailingDiv {
     position: absolute;
     cursor: grabbing;
-    top: -1000px;
-    left: -1000px;
+    transform: translate(-1000px, -1000px);
+    top: 0px;
+    left: 0px;
 }
 
 tr:nth-child(odd) td:nth-child(even),

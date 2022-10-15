@@ -49,6 +49,8 @@ function forEach(cb) {
     }
 }
 
+const trailingTranslate = (x, y) => `translateX(${x}px) translateY(${y}px)`;
+
 
 const dom = (() => {
     const $ = (id) => document.getElementById(id);
@@ -127,19 +129,16 @@ const dom = (() => {
         const legalTargets = state.getLegalTargets(startRow, startColumn);
         //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
         state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(legalTargets);
-        trailDiv.style.top = clientY - height / 2 + "px";
-        trailDiv.style.left = clientX - width / 2 + "px";
+        trailDiv.style.transform = trailingTranslate(clientX - width / 2, clientY - height / 2);
         function drag(move) {
             const { clientX, clientY } = coordsExtractor(move);
-            trailDiv.style.top = clientY - height / 2 + "px";
-            trailDiv.style.left = clientX - width / 2 + "px";
+            trailDiv.style.transform = trailingTranslate(clientX - width / 2, clientY - height / 2);
         }
 
         function endDrag(end) {
             mainDiv.removeEventListener(moveEvent, drag);
             trailDiv.style.backgroundImage = "";
-            trailDiv.style.top = "-1000px";
-            trailDiv.style.left = "-1000px";
+            trailDiv.style.transform = trailingTranslate(-1000, -1000);
             dragging = false;
             let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(coordsExtractor(end));
             BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
