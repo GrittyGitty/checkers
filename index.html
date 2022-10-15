@@ -14,13 +14,14 @@
     <link rel="prefetch" as="image" href="./dist/assets/black-king.png" />
     <script>
         function set() {
-            let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.08, 67);
+            let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.085, 67);
             document.documentElement.style.setProperty('--cellsize', `${cell_size}px`);
         }
         set();
         window.addEventListener("resize", set);
     </script>
     <script defer src="./dist/index.min.js"></script>
+    <script defer src="./dist/commit.js"></script>
 </head>
 
 <body>
@@ -118,6 +119,10 @@
         </div>
         <div id="trailingDiv"></div>
     </div>
+    <a target="_blank" rel="noopener noreferrer" href="https://github.com/netanel-haber/checkers" id="github"
+        data-head-during-build="2af223f">
+        <img src="./dist/assets/github-icon.png" />
+    </a>
 </body>
 
 </html>

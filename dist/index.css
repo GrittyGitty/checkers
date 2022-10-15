@@ -97,7 +97,6 @@ tr:nth-child(even) td:nth-child(odd) {
 td,
 #trailingDiv,
 #turnDiv {
-    --cellsize: min(8vmin, 67px);
     width: var(--cellsize);
     height: var(--cellsize);
 }
@@ -146,4 +145,22 @@ td,
     flex: 1;
     width: 72px;
     height: 53px;
+}
+
+#github {
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 0.8rem;
+    color: white;
+    text-decoration: none;
+}
+
+#github img {
+    width: 32px;
+    height: 32px;
 }
