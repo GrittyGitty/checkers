@@ -4,8 +4,8 @@
   "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "main": "index.js",
   "scripts": {
-    "insert_sha": "zx build_scripts/insert_sha.mjs",
-    "cp_files": "zx build_scripts/copy_files_into_dist.mjs",
+    "uglify": "uglifyjs index.js -cmo index.min.js --source-map url=index.min.js.map",
+    "pkg": "zx pkg.mjs",
     "dev": "live-server . & nodemon"
   },
   "repository": {
@@ -15,6 +15,7 @@
   "author": "Netanel Haber",
   "homepage": "https://github.com/netanel-haber/checkers#readme",
   "devDependencies": {
+    "live-server": "^1.2.2",
     "nodemon": "^2.0.20",
     "replace-in-file": "^6.3.5",
     "uglify-js": "^3.17.3",
@@ -30,6 +31,6 @@
       "index.html",
       "commit.js"
     ],
-    "exec": "uglifyjs index.js -cmo dist/index.min.js --source-map url=index.min.js.map && npm run cp_files && npm run insert_sha"
+    "exec": "npm run uglify && npm run pkg"
   }
 }
