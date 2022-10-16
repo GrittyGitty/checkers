@@ -4,9 +4,8 @@
   "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "main": "index.js",
   "scripts": {
-    "uglify": "uglifyjs index.js -cmo index.min.js --source-map url=index.min.js.map",
     "pkg": "zx pkg.mjs",
-    "exec": "npm run uglify && npm run pkg && serve",
+    "exec": "npm run pkg && serve",
     "dev": "nodemon"
   },
   "repository": {
