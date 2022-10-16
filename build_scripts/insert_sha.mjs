@@ -1,4 +1,8 @@
 #!/usr/bin/env zx
+
+$.verbose = false
+
+
 const replace = require("replace-in-file");
 const sha = String(await $`git rev-parse --short HEAD`).trim();
 

@@ -4,8 +4,9 @@
   "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "main": "index.js",
   "scripts": {
-    "insert_sha": "zx insert_sha.mjs",
-    "dev": "live-server . & nodemon --watch index.js --watch index.css --exec 'uglifyjs index.js -cmo dist/index.min.js --source-map url=index.min.js.map && cp index.css dist/index.css && cp index.js dist/index.js' && insert_sha"
+    "insert_sha": "zx build_scripts/insert_sha.mjs",
+    "cp_files": "zx build_scripts/copy_files_into_dist.mjs",
+    "dev": "live-server . & nodemon"
   },
   "repository": {
     "type": "git",
@@ -18,5 +19,17 @@
     "replace-in-file": "^6.3.5",
     "uglify-js": "^3.17.3",
     "zx": "^7.1.1"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "dist/**"
+    ],
+    "watch": [
+      "index.js",
+      "index.css",
+      "index.html",
+      "commit.js"
+    ],
+    "exec": "uglifyjs index.js -cmo dist/index.min.js --source-map url=index.min.js.map && npm run cp_files && npm run insert_sha"
   }
 }

@@ -49,7 +49,6 @@ function forEach(cb) {
     }
 }
 
-const trailingTranslate = (x, y) => `translateX(${x}px) translateY(${y}px)`;
 
 
 const dom = (() => {
@@ -111,7 +110,6 @@ const dom = (() => {
 
     function startDrag(e, { moveEvent, endEvent, coordsExtractor }) {
         const { clientX, clientY } = coordsExtractor(e);
-        console.log({ clientX, clientY });
         let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates({ clientX, clientY });
 
         const classSet = new Set(getDomCell(startRow, startColumn).classList);
@@ -130,17 +128,25 @@ const dom = (() => {
         const legalTargets = state.getLegalTargets(startRow, startColumn);
         //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
         state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(legalTargets);
-        console.log(e);
-        trailDiv.style.transform = trailingTranslate(clientX - width / 2, clientY - height / 2);
+
+        const translateTrailingDiv = (x, y) => trailDiv.style.transform = `translateX(${x}px) translateY(${y}px)`;
+
+        const { x, y } = pointRelativeToTable({ clientX, clientY });
+
+        const pieceRelativeX = x % width;
+        const pieceRelativeY = y % height;
+
+        const translateTrailingDivOffsetByRelativePoint = ({ clientX, clientY }) => translateTrailingDiv(clientX - pieceRelativeX, clientY - pieceRelativeY);
+        translateTrailingDivOffsetByRelativePoint({ clientX, clientY })
         function drag(move) {
             const { clientX, clientY } = coordsExtractor(move);
-            trailDiv.style.transform = trailingTranslate(clientX - width / 2, clientY - height / 2);
+            translateTrailingDivOffsetByRelativePoint({ clientX, clientY });
         }
 
         function endDrag(end) {
             mainDiv.removeEventListener(moveEvent, drag);
             trailDiv.style.backgroundImage = "";
-            trailDiv.style.transform = trailingTranslate(-1000, -1000);
+            translateTrailingDiv(-1000, -1000);
             dragging = false;
             let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(coordsExtractor(end));
             BoardState.handleMove(finalRow, finalColumn, startRow, startColumn);
@@ -148,11 +154,16 @@ const dom = (() => {
     }
 
     let { left, top, width, height } = table.getBoundingClientRect();
-    function getIndicesForMouseCoordinates({ clientX, clientY }) {
+
+    function pointRelativeToTable({ clientX, clientY }) {
         const subtractFromX = left + window.pageXOffset;
         const subtractFromY = top + window.pageYOffset;
         const x = clientX - subtractFromX, y = clientY - subtractFromY;
+        return { x, y }
+    }
 
+    function getIndicesForMouseCoordinates({ clientX, clientY }) {
+        const { x, y } = pointRelativeToTable({ clientX, clientY })
         if (x > width || y > height)
             return { row: -1, column: -1 };
         return {
