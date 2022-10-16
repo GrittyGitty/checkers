@@ -6,7 +6,8 @@
   "scripts": {
     "uglify": "uglifyjs index.js -cmo index.min.js --source-map url=index.min.js.map",
     "pkg": "zx pkg.mjs",
-    "dev": "live-server . & nodemon"
+    "exec": "npm run uglify && npm run pkg && serve",
+    "dev": "nodemon"
   },
   "repository": {
     "type": "git",
@@ -15,9 +16,9 @@
   "author": "Netanel Haber",
   "homepage": "https://github.com/netanel-haber/checkers#readme",
   "devDependencies": {
-    "live-server": "^1.2.2",
     "nodemon": "^2.0.20",
     "replace-in-file": "^6.3.5",
+    "serve": "^14.0.1",
     "uglify-js": "^3.17.3",
     "zx": "^7.1.1"
   },
@@ -29,8 +30,9 @@
       "index.js",
       "index.css",
       "index.html",
-      "commit.js"
+      "commit.js",
+      "pkg.mjs"
     ],
-    "exec": "npm run uglify && npm run pkg"
+    "exec": "npm run exec"
   }
 }

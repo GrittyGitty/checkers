@@ -2,14 +2,15 @@
 
 $.verbose = false
 
+import replace from "replace-in-file";
 
-const replace = require("replace-in-file");
 const sha = String(await $`git rev-parse --short HEAD`).trim();
 
 const move = (file) => $`mv ${file} dist/${sha}.${file}`;
 const copy = (file) => $`cp ${file} dist/${sha}.${file}`;
 
 await Promise.all([
+  $`find dist -maxdepth 1 -type f -delete`,
   replace({
     files: "index.html",
     from: [/data-head-during-build=".*"/, new RegExp(`(?<=dist\/)[^.]*?\\.(?=.*(js|css))`, "g")],
