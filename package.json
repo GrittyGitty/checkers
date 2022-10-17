@@ -4,10 +4,10 @@
   "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "type": "module",
   "scripts": {
-    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup",
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "./deploy.sh"
   },
   "repository": {
     "type": "git",
@@ -16,7 +16,6 @@
   "author": "Netanel Haber",
   "homepage": "https://github.com/netanel-haber/checkers#readme",
   "devDependencies": {
-    "push-dir": "^0.4.1",
     "typescript": "^4.6.4",
     "vite": "^3.1.6"
   }
