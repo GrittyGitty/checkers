@@ -57,13 +57,12 @@ function updateUI(state: BoardState, legalTargets: Cell[] = []) {
 
 
 // MAIN:
-dom.registerStateControllers({
+dom.registerDrag({
   handleMove,
   updateUI: (startRow: number, startColumn: number) => {
     updateUI(state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]), state.getLegalTargets(startRow, startColumn))
   }
 });
-
 dom.registerShare(() => {
   navigator.clipboard.writeText(store.share).then(() => {
     toast("URL with game-state copied to clipboard! 🎆🎆🎆")

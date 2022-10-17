@@ -31,8 +31,6 @@ const createCellInListChecker = (list: Cell[]) => {
 
 let dragging = false;
 
-let stateControllers: StateControllers;
-
 const forEachDomCell = (cb: (cell: Cell & { domCell: HTMLTableCellElement }) => void) =>
   forEachCell((row: number, column: number) => cb({ row, column, domCell: getDomCell(row, column) }))
 
@@ -53,57 +51,58 @@ const renderClasses = (grid: Grid, { legalTargets, piecesThatCanMove, turn }: { 
   })
 }
 
-mousedown(table, (e) => {
-  startDrag(e, { moveEvent: "mousemove", endEvent: "mouseup", coordsExtractor: e => e })
-})
-touchstart(table, (e) => {
-  startDrag(e, { moveEvent: "touchmove", endEvent: "touchend", coordsExtractor: e => e.changedTouches[0] });
-})
+const createDrag = (stateControllers: StateControllers) => {
+  mousedown(table, (e) => {
+    startDrag(e, { moveEvent: "mousemove", endEvent: "mouseup", coordsExtractor: e => e });
+  });
+  touchstart(table, (e) => {
+    startDrag(e, { moveEvent: "touchmove", endEvent: "touchend", coordsExtractor: e => e.changedTouches[0] });
+  });
+  function startDrag<EventKey extends EventMapSubset<TouchEvent | MouseEvent>>(e: HTMLElementEventMap[EventKey], { moveEvent, endEvent, coordsExtractor }: { moveEvent: EventKey; endEvent: EventKey; coordsExtractor: (ev: typeof e) => EventCoords; }) {
+    const { clientX, clientY } = coordsExtractor(e);
+    let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates({ clientX, clientY });
 
-function startDrag<EventKey extends EventMapSubset<TouchEvent | MouseEvent>>(e: HTMLElementEventMap[EventKey], { moveEvent, endEvent, coordsExtractor }: { moveEvent: EventKey, endEvent: EventKey, coordsExtractor: (ev: typeof e) => EventCoords }) {
-  const { clientX, clientY } = coordsExtractor(e);
-  let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates({ clientX, clientY });
+    const classSet = new Set(Array.from(getDomCell(startRow, startColumn).classList));
+    const cellHas = classSet.has.bind(classSet);
+    if (!cellHas(CAN_MOVE) || cellHas(EMPTY_PIECE))
+      return;
 
-  const classSet = new Set(Array.from(getDomCell(startRow, startColumn).classList));
-  const cellHas = classSet.has.bind(classSet);
-  if (!cellHas(CAN_MOVE) || cellHas(EMPTY_PIECE))
-    return;
+    dragging = true;
 
-  dragging = true;
+    mainDiv.addEventListener(moveEvent, drag);
+    mainDiv.addEventListener(endEvent, endDrag, { once: true });
 
-  mainDiv.addEventListener(moveEvent, drag);
-  mainDiv.addEventListener(endEvent, endDrag, { once: true });
+    const color = pieceClasses.find(cellHas);
+    color && (trailDiv.className = color);
+    const { width, height } = trailDiv.getBoundingClientRect();
 
-  const color = pieceClasses.find(cellHas);
-  color && (trailDiv.className = color);
-  const { width, height } = trailDiv.getBoundingClientRect();
+    //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
+    stateControllers.updateUI(startRow, startColumn);
 
-  //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
-  stateControllers.updateUI(startRow, startColumn);
+    const translateTrailingDiv = (x: number, y: number) => trailDiv.style.transform = `translateX(${x}px) translateY(${y}px)` as const;
 
-  const translateTrailingDiv = (x: number, y: number) => trailDiv.style.transform = `translateX(${x}px) translateY(${y}px)` as const;
+    const { x, y } = pointRelativeToTable({ clientX, clientY });
 
-  const { x, y } = pointRelativeToTable({ clientX, clientY });
+    const pieceRelativeX = x % width;
+    const pieceRelativeY = y % height;
 
-  const pieceRelativeX = x % width;
-  const pieceRelativeY = y % height;
-
-  const translateTrailingDivOffsetByRelativePoint = ({ clientX, clientY }: EventCoords) => translateTrailingDiv(clientX - pieceRelativeX, clientY - pieceRelativeY);
-  translateTrailingDivOffsetByRelativePoint({ clientX, clientY })
-
-  function drag(move: typeof e) {
-    const { clientX, clientY } = coordsExtractor(move);
+    const translateTrailingDivOffsetByRelativePoint = ({ clientX, clientY }: EventCoords) => translateTrailingDiv(clientX - pieceRelativeX, clientY - pieceRelativeY);
     translateTrailingDivOffsetByRelativePoint({ clientX, clientY });
-  }
 
-  function endDrag(end: typeof e) {
-    mainDiv.removeEventListener(moveEvent, drag);
-    trailDiv.style.backgroundImage = "";
-    translateTrailingDiv(-1000, -1000);
-    dragging = false;
-    let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(coordsExtractor(end));
-    stateControllers.handleMove(finalRow, finalColumn, startRow, startColumn);
-  }
+    function drag(move: typeof e) {
+      const { clientX, clientY } = coordsExtractor(move);
+      translateTrailingDivOffsetByRelativePoint({ clientX, clientY });
+    }
+
+    function endDrag(end: typeof e) {
+      mainDiv.removeEventListener(moveEvent, drag);
+      trailDiv.style.backgroundImage = "";
+      translateTrailingDiv(-1000, -1000);
+      dragging = false;
+      let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(coordsExtractor(end));
+      stateControllers.handleMove(finalRow, finalColumn, startRow, startColumn);
+    }
+  };
 }
 
 let { left, top, width, height } = table.getBoundingClientRect();
@@ -147,7 +146,7 @@ export const dom = {
       mouseover(domCell, () => highlightHovered(row, column))
     })
   },
-  registerStateControllers(controllers: StateControllers) {
-    stateControllers = controllers;
+  registerDrag(controllers: StateControllers) {
+    createDrag(controllers);
   }
 };
