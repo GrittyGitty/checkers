@@ -32,3 +32,7 @@ export type EventCoords = {
   clientX: number;
   clientY: number;
 };
+
+export type SerializedState = { grid: string; turn: Color };
+
+export type StateControllers = { handleMove: (a: number, b: number, c: number, d: number,) => void; updateUI: (startRow: number, startColumn: number) => void };

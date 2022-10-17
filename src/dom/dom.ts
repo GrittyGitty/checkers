@@ -1,0 +1,153 @@
+import { pieces, EMPTY_VALUE, colors } from "../consts";
+import { stack } from "../stack";
+import { Cell, Grid, Color, EventMapSubset, EventCoords, StateControllers } from "../types";
+import { forEachCell, clsx } from "../utils";
+
+const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id)! as E;
+
+const table = $<HTMLTableElement>("table");
+const turnDiv = $("turnDiv");
+const trailDiv = $("trailingDiv");
+const mainDiv = $("containerBoard");
+const reset = $("reset");
+const share = $("share");
+const undo = $<HTMLButtonElement>("undo");
+const redo = $<HTMLButtonElement>("redo");
+
+const add = <K extends keyof HTMLElementEventMap>(e: K) => (el: HTMLElement, cb: (e: HTMLElementEventMap[K]) => void) => el.addEventListener(e, cb);
+const click = add("click"), mousedown = add("mousedown"), mouseover = add("mouseover"), touchstart = add("touchstart");
+
+const LEGAL_TARGET = "legal-target";
+const CAN_MOVE = "can-move";
+const pieceClasses = pieces.map((_, i) => `piece-${pieces[i]}`);
+const EMPTY_PIECE = pieceClasses[EMPTY_VALUE];
+const colorToClass = Object.fromEntries(colors.map((c) => [c, `piece-${c}`]));
+const getDomCell = (row: number, column: number) => table.rows[row].cells[column];
+
+const createCellInListChecker = (list: Cell[]) => {
+  const moveSet = new Set(list.map(({ row, column }) => `${row},${column}`));
+  return (row: number, column: number) => moveSet.has(`${row},${column}`);
+}
+
+let dragging = false;
+
+let stateControllers: StateControllers;
+
+const forEachDomCell = (cb: (cell: Cell & { domCell: HTMLTableCellElement }) => void) =>
+  forEachCell((row: number, column: number) => cb({ row, column, domCell: getDomCell(row, column) }))
+
+const renderClasses = (grid: Grid, { legalTargets, piecesThatCanMove, turn }: { turn: Color; legalTargets: Cell[]; piecesThatCanMove: Cell[] }) => {
+  turnDiv.className = colorToClass[turn];
+  undo.disabled = stack.isEmpty;
+  redo.disabled = stack.isEnd;
+  const isLegalTargetForHoveredCell = createCellInListChecker(legalTargets);
+  const canMove = createCellInListChecker(piecesThatCanMove)
+  forEachDomCell(({ row, column, domCell }) => {
+    const cellVal = grid[row][column];
+    const newValue = clsx({
+      [LEGAL_TARGET]: isLegalTargetForHoveredCell(row, column),
+      [CAN_MOVE]: canMove(row, column) && !dragging
+    }, pieceClasses[cellVal]);
+    if (domCell.className !== newValue)
+      domCell.className = newValue;
+  })
+}
+
+mousedown(table, (e) => {
+  startDrag(e, { moveEvent: "mousemove", endEvent: "mouseup", coordsExtractor: e => e })
+})
+touchstart(table, (e) => {
+  startDrag(e, { moveEvent: "touchmove", endEvent: "touchend", coordsExtractor: e => e.changedTouches[0] });
+})
+
+function startDrag<EventKey extends EventMapSubset<TouchEvent | MouseEvent>>(e: HTMLElementEventMap[EventKey], { moveEvent, endEvent, coordsExtractor }: { moveEvent: EventKey, endEvent: EventKey, coordsExtractor: (ev: typeof e) => EventCoords }) {
+  const { clientX, clientY } = coordsExtractor(e);
+  let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates({ clientX, clientY });
+
+  const classSet = new Set(Array.from(getDomCell(startRow, startColumn).classList));
+  const cellHas = classSet.has.bind(classSet);
+  if (!cellHas(CAN_MOVE) || cellHas(EMPTY_PIECE))
+    return;
+
+  dragging = true;
+
+  mainDiv.addEventListener(moveEvent, drag);
+  mainDiv.addEventListener(endEvent, endDrag, { once: true });
+
+  const color = pieceClasses.find(cellHas);
+  color && (trailDiv.className = color);
+  const { width, height } = trailDiv.getBoundingClientRect();
+
+  //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
+  stateControllers.updateUI(startRow, startColumn);
+
+  const translateTrailingDiv = (x: number, y: number) => trailDiv.style.transform = `translateX(${x}px) translateY(${y}px)` as const;
+
+  const { x, y } = pointRelativeToTable({ clientX, clientY });
+
+  const pieceRelativeX = x % width;
+  const pieceRelativeY = y % height;
+
+  const translateTrailingDivOffsetByRelativePoint = ({ clientX, clientY }: EventCoords) => translateTrailingDiv(clientX - pieceRelativeX, clientY - pieceRelativeY);
+  translateTrailingDivOffsetByRelativePoint({ clientX, clientY })
+
+  function drag(move: typeof e) {
+    const { clientX, clientY } = coordsExtractor(move);
+    translateTrailingDivOffsetByRelativePoint({ clientX, clientY });
+  }
+
+  function endDrag(end: typeof e) {
+    mainDiv.removeEventListener(moveEvent, drag);
+    trailDiv.style.backgroundImage = "";
+    translateTrailingDiv(-1000, -1000);
+    dragging = false;
+    let { row: finalRow, column: finalColumn } = getIndicesForMouseCoordinates(coordsExtractor(end));
+    stateControllers.handleMove(finalRow, finalColumn, startRow, startColumn);
+  }
+}
+
+let { left, top, width, height } = table.getBoundingClientRect();
+window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
+
+function pointRelativeToTable({ clientX, clientY }: EventCoords) {
+  const subtractFromX = left + window.pageXOffset;
+  const subtractFromY = top + window.pageYOffset;
+  const x = clientX - subtractFromX, y = clientY - subtractFromY;
+  return { x, y }
+}
+
+function getIndicesForMouseCoordinates({ clientX, clientY }: EventCoords) {
+  const { x, y } = pointRelativeToTable({ clientX, clientY })
+  if (x > width || y > height)
+    return { row: -1, column: -1 };
+  return {
+    row: Math.floor((y / height) * 8),
+    column: Math.floor((x / width) * 8)
+  };
+}
+
+
+
+export const dom = {
+  updateDOM({ grid, turn, legalTargets, piecesThatCanMove }: { grid: Grid; turn: Color; legalTargets: Cell[]; piecesThatCanMove: Cell[] }) {
+    renderClasses(grid, { legalTargets, piecesThatCanMove, turn });
+  },
+  registerShare: (cb: (e: MouseEvent) => void) => click(share, cb),
+  registerUndo: (undoCb: VoidFunction, redoCb: VoidFunction) => {
+    click(undo, undoCb);
+    click(redo, redoCb);
+    window.addEventListener("keydown", ({ key }) => {
+      if (key === "ArrowLeft" && !undo.disabled) undoCb();
+      if (key === "ArrowRight" && !redo.disabled) redoCb();
+    })
+  },
+  registerReset: (cb: VoidFunction) => click(reset, cb),
+  registerHover(highlightHovered: (row: number, column: number) => void) {
+    forEachDomCell(({ domCell, row, column }) => {
+      mouseover(domCell, () => highlightHovered(row, column))
+    })
+  },
+  registerStateControllers(controllers: StateControllers) {
+    stateControllers = controllers;
+  }
+};
