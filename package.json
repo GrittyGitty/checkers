@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite & cargo run --manifest-path ws/Cargo.toml",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "repository": {

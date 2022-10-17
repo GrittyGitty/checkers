@@ -341,7 +341,7 @@ function isThereAnEatingPossibilityForGivenColor(grid: Grid, color?: Color) {
 
 
 function colorForCell(gridVal: number) {
-    return gridVal !== EMPTY_VALUE ? pieces[gridVal].split("-")[0] : "empty";
+    return gridVal !== EMPTY_VALUE ? pieces[gridVal].split("-")[0] as Color : undefined;
 }
 
 type PotentialMoves = {
