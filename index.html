@@ -7,11 +7,11 @@
     <meta name="description" content="PVP vanilla checkers, author: Netanel Haber">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVP vanilla checkers</title>
-    <link rel="stylesheet" href="./dist/05b39df.index.css">
-    <link rel="prefetch" as="image" href="./dist/assets/red.png" />
-    <link rel="prefetch" as="image" href="./dist/assets/black.png" />
-    <link rel="prefetch" as="image" href="./dist/assets/red-king.png" />
-    <link rel="prefetch" as="image" href="./dist/assets/black-king.png" />
+    <link rel="stylesheet" href="/src/index.css">
+    <link rel="prefetch" as="image" href="/red.png" />
+    <link rel="prefetch" as="image" href="/black.png" />
+    <link rel="prefetch" as="image" href="/red-king.png" />
+    <link rel="prefetch" as="image" href="/black-king.png" />
     <script>
         function set() {
             let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.085, 67);
@@ -20,92 +20,90 @@
         set();
         window.addEventListener("resize", set);
     </script>
-    <script defer src="./dist/05b39df.index.min.js"></script>
-    <script defer src="./dist/05b39df.commit.js"></script>
 </head>
 
 <body>
     <div id="containerBoard">
         <table id="table">
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
         </table>
         <div id="containerTurn"> current turn
@@ -119,10 +117,10 @@
         </div>
         <div id="trailingDiv"></div>
     </div>
-    <a target="_blank" rel="noopener noreferrer" href="https://github.com/netanel-haber/checkers" id="github"
-        data-head-during-build="a0cf3b1">
-        <img src="./dist/assets/github-icon.png" />
+    <a target="_blank" rel="noopener noreferrer" href="https://github.com/netanel-haber/checkers" id="github">
+        <img src="/github-icon.png" />
     </a>
+    <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>
