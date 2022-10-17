@@ -4,10 +4,9 @@
   "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite & cargo run --manifest-path ws/Cargo.toml",
     "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "./deploy.sh"
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",

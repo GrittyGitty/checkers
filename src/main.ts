@@ -1,17 +1,22 @@
+import type { EventMapSubset, Cell, EventCoords, FinalCell, Grid, StartCell } from "./types";
+import { Color } from './types';
+
 const pieces = ["black", "black-king", "red", "red-king", "empty"];
 const movingDys = [[-1], [-1, 1], [1], [-1, 1]];
 const eatingDys = movingDys.map((dirs) => dirs.map((d) => d * 2));
-const colors = ["black", "red"];
+
+const colors = [Color.black, Color.red] as const;
+
 const EMPTY_VALUE = pieces.length - 1;
 
-const clsx = (...classes) => {
-    const bag = Object.entries(classes.pop()).filter(([, v]) => Boolean(v)).map(([cls]) => cls);
-    return [...classes, ...bag].join(" ");
+const clsx = (bag: Record<string, unknown>, ...strings: string[]) => {
+    const filtered = Object.entries(bag).filter(([, v]) => Boolean(v)).map(([cls]) => cls);
+    return [...strings, ...filtered].join(" ");
 }
 
 
 const defaultSetup = {
-    turn: "black",
+    turn: Color.black,
     grid: `
 -r-r-r-r
 r-r-r-r-
@@ -25,15 +30,16 @@ b-b-b-b-
 };
 
 
-
-
 class GridUpdate {
-    constructor(row, column, value = EMPTY_VALUE) {
+    indices: Cell;
+    value: number;
+
+    constructor(row: number, column: number, value = EMPTY_VALUE) {
         this.indices = { row, column };
         this.value = value;
     }
 
-    static updateFactory(final, finalVal, ...remove) {
+    static updateFactory(final: FinalCell, finalVal: number, ...remove: GridUpdate[]) {
         let updates = [];
         updates.push(new GridUpdate(final.finalRow, final.finalColumn, finalVal));
         remove.forEach(({ indices }) => updates.push(new GridUpdate(indices.row, indices.column)));
@@ -41,7 +47,7 @@ class GridUpdate {
     }
 }
 
-function forEach(cb) {
+function forEach(cb: (row: number, column: number) => void) {
     for (let row = 0; row < 8; row++) {
         for (let column = 0; column < 8; column++) {
             cb(row, column);
@@ -50,41 +56,38 @@ function forEach(cb) {
 }
 
 
-
 const dom = (() => {
-    const $ = (id) => document.getElementById(id);
+    const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id)! as E;
 
-    const table = $("table");
+    const table = $<HTMLTableElement>("table");
     const turnDiv = $("turnDiv");
     const trailDiv = $("trailingDiv");
     const mainDiv = $("containerBoard");
     const reset = $("reset");
     const share = $("share");
-    const undo = $("undo");
-    const redo = $("redo");
+    const undo = $<HTMLButtonElement>("undo");
+    const redo = $<HTMLButtonElement>("redo");
 
-    const [click, mousedown, mouseover, keydown, touchstart] =
-        ["click", "mousedown", "mouseover", "keydown", "touchstart"].map(
-            e => (el, cb) => el.addEventListener(e, cb)
-        );
+    const add = <K extends keyof HTMLElementEventMap>(e: K) => (el: HTMLElement, cb: (e: HTMLElementEventMap[K]) => void) => el.addEventListener(e, cb);
+    const click = add("click"), mousedown = add("mousedown"), mouseover = add("mouseover"), touchstart = add("touchstart");
 
     const LEGAL_TARGET = "legal-target";
     const CAN_MOVE = "can-move";
     const pieceClasses = pieces.map((_, i) => `piece-${pieces[i]}`);
     const EMPTY_PIECE = pieceClasses[EMPTY_VALUE];
     const colorToClass = Object.fromEntries(colors.map((c) => [c, `piece-${c}`]));
-    const getDomCell = (row, column) => table.rows[row].cells[column];
+    const getDomCell = (row: number, column: number) => table.rows[row].cells[column];
 
-    const createCellInListChecker = (list) => {
+    const createCellInListChecker = (list: Cell[]) => {
         const moveSet = new Set(list.map(({ row, column }) => `${row},${column}`));
-        return (row, column) => moveSet.has(`${row},${column}`);
+        return (row: number, column: number) => moveSet.has(`${row},${column}`);
     }
 
     let dragging = false;
 
-    const forEachCell = (cb) => forEach((row, column) => cb({ row, column, domCell: getDomCell(row, column) }))
+    const forEachCell = (cb: (cell: Cell & { domCell: HTMLTableCellElement }) => void) => forEach((row: number, column: number) => cb({ row, column, domCell: getDomCell(row, column) }))
 
-    const renderClasses = (grid, { legalTargets, piecesThatCanMove, turn }) => {
+    const renderClasses = (grid: Grid, { legalTargets, piecesThatCanMove, turn }: { turn: Color; legalTargets: Cell[]; piecesThatCanMove: Cell[] }) => {
         turnDiv.className = colorToClass[turn];
         undo.disabled = idx === 0;
         redo.disabled = idx === stack.length - 1;
@@ -92,10 +95,10 @@ const dom = (() => {
         const canMove = createCellInListChecker(piecesThatCanMove)
         forEachCell(({ row, column, domCell }) => {
             const cellVal = grid[row][column];
-            const newValue = clsx(pieceClasses[cellVal], {
+            const newValue = clsx({
                 [LEGAL_TARGET]: isLegalTargetForHoveredCell(row, column),
                 [CAN_MOVE]: canMove(row, column) && !dragging
-            });
+            }, pieceClasses[cellVal]);
             if (domCell.className !== newValue)
                 domCell.className = newValue;
         })
@@ -108,11 +111,11 @@ const dom = (() => {
         startDrag(e, { moveEvent: "touchmove", endEvent: "touchend", coordsExtractor: e => e.changedTouches[0] });
     })
 
-    function startDrag(e, { moveEvent, endEvent, coordsExtractor }) {
+    function startDrag<EventKey extends EventMapSubset<TouchEvent | MouseEvent>>(e: HTMLElementEventMap[EventKey], { moveEvent, endEvent, coordsExtractor }: { moveEvent: EventKey, endEvent: EventKey, coordsExtractor: (ev: typeof e) => EventCoords }) {
         const { clientX, clientY } = coordsExtractor(e);
         let { row: startRow, column: startColumn } = getIndicesForMouseCoordinates({ clientX, clientY });
 
-        const classSet = new Set(getDomCell(startRow, startColumn).classList);
+        const classSet = new Set(Array.from(getDomCell(startRow, startColumn).classList));
         const cellHas = classSet.has.bind(classSet);
         if (!cellHas(CAN_MOVE) || cellHas(EMPTY_PIECE))
             return;
@@ -122,28 +125,29 @@ const dom = (() => {
         mainDiv.addEventListener(moveEvent, drag);
         mainDiv.addEventListener(endEvent, endDrag, { once: true });
 
-
-        trailDiv.className = pieceClasses.find(cellHas);
+        const color = pieceClasses.find(cellHas);
+        color && (trailDiv.className = color);
         const { width, height } = trailDiv.getBoundingClientRect();
         const legalTargets = state.getLegalTargets(startRow, startColumn);
         //-------------Temporarily remove clicked on piece for The Purposes Of Drag------------------
         state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]).updateUI(legalTargets);
 
-        const translateTrailingDiv = (x, y) => trailDiv.style.transform = `translateX(${x}px) translateY(${y}px)`;
+        const translateTrailingDiv = (x: number, y: number) => trailDiv.style.transform = `translateX(${x}px) translateY(${y}px)` as const;
 
         const { x, y } = pointRelativeToTable({ clientX, clientY });
 
         const pieceRelativeX = x % width;
         const pieceRelativeY = y % height;
 
-        const translateTrailingDivOffsetByRelativePoint = ({ clientX, clientY }) => translateTrailingDiv(clientX - pieceRelativeX, clientY - pieceRelativeY);
+        const translateTrailingDivOffsetByRelativePoint = ({ clientX, clientY }: EventCoords) => translateTrailingDiv(clientX - pieceRelativeX, clientY - pieceRelativeY);
         translateTrailingDivOffsetByRelativePoint({ clientX, clientY })
-        function drag(move) {
+
+        function drag(move: typeof e) {
             const { clientX, clientY } = coordsExtractor(move);
             translateTrailingDivOffsetByRelativePoint({ clientX, clientY });
         }
 
-        function endDrag(end) {
+        function endDrag(end: typeof e) {
             mainDiv.removeEventListener(moveEvent, drag);
             trailDiv.style.backgroundImage = "";
             translateTrailingDiv(-1000, -1000);
@@ -155,14 +159,15 @@ const dom = (() => {
 
     let { left, top, width, height } = table.getBoundingClientRect();
 
-    function pointRelativeToTable({ clientX, clientY }) {
+
+    function pointRelativeToTable({ clientX, clientY }: EventCoords) {
         const subtractFromX = left + window.pageXOffset;
         const subtractFromY = top + window.pageYOffset;
         const x = clientX - subtractFromX, y = clientY - subtractFromY;
         return { x, y }
     }
 
-    function getIndicesForMouseCoordinates({ clientX, clientY }) {
+    function getIndicesForMouseCoordinates({ clientX, clientY }: EventCoords) {
         const { x, y } = pointRelativeToTable({ clientX, clientY })
         if (x > width || y > height)
             return { row: -1, column: -1 };
@@ -172,7 +177,7 @@ const dom = (() => {
         };
     }
 
-    function toast(text, ms = 2000) {
+    function toast(text: string, ms = 2000) {
         const atoast = document.createElement('div');
         atoast.classList.add("toast")
         atoast.innerText = text;
@@ -184,20 +189,20 @@ const dom = (() => {
 
     window.onresize = () => ({ left, top, width, height } = table.getBoundingClientRect());
     return {
-        updateUI({ grid, turn, legalTargets, piecesThatCanMove }) {
+        updateUI({ grid, turn, legalTargets, piecesThatCanMove }: { grid: Grid; turn: Color; legalTargets: Cell[]; piecesThatCanMove: Cell[] }) {
             renderClasses(grid, { legalTargets, piecesThatCanMove, turn });
         },
-        registerShare: cb => click(share, cb),
-        registerUndo: (undoCb, redoCb) => {
+        registerShare: (cb: (e: MouseEvent) => void) => click(share, cb),
+        registerUndo: (undoCb: VoidFunction, redoCb: VoidFunction) => {
             click(undo, undoCb);
             click(redo, redoCb);
-            keydown(window, ({ key }) => {
+            window.addEventListener("keydown", ({ key }) => {
                 if (key === "ArrowLeft" && !undo.disabled) undoCb();
                 if (key === "ArrowRight" && !redo.disabled) redoCb();
-            });
+            })
         },
-        registerReset: cb => click(reset, cb),
-        registerHover(highlightHovered) {
+        registerReset: (cb: VoidFunction) => click(reset, cb),
+        registerHover(highlightHovered: (row: number, column: number) => void) {
             forEachCell(({ domCell, row, column }) => {
                 mouseover(domCell, () => highlightHovered(row, column))
             })
@@ -207,20 +212,25 @@ const dom = (() => {
 })();
 
 class BoardState {
-    constructor(grid, turnColor, { flaggedCell } = {}) {
+    grid: Grid;
+    currentTurn: Color;
+    flaggedCell?: Cell;
+    piecesThatCanMove: Cell[];
+
+    constructor(grid: Grid, turnColor: Color, { flaggedCell }: { flaggedCell?: Cell } = {}) {
         this.grid = grid;
         this.currentTurn = turnColor;
         this.flaggedCell = flaggedCell;
         this.piecesThatCanMove = this.getPiecesThatCanMove();
     }
 
-    updatedGrid(updates) {
+    updatedGrid(updates: GridUpdate[]) {
         let newGrid = BoardState.computeGrid(this.grid, updates);
         return new BoardState(newGrid, this.currentTurn);
     }
 
-    updateFlaggedCell(flagged = undefined) {
-        return new BoardState(this.grid, this.currentTurn, { flagged });
+    updateFlaggedCell(flaggedCell?: Cell) {
+        return new BoardState(this.grid, this.currentTurn, { flaggedCell });
     }
 
     updateCurrentTurn() {
@@ -232,31 +242,34 @@ class BoardState {
         return allCellsForColor(this.grid, this.currentTurn).filter(({ row, column }) => this.getLegalTargets(row, column).length);
     }
 
-    updateUI(legalTargets = []) {
+    updateUI(legalTargets: Cell[] = []) {
         dom.updateUI({ grid: this.grid, turn: this.currentTurn, legalTargets, piecesThatCanMove: this.piecesThatCanMove });
         return this;
     }
 
-    getLegalTargets(startRow, startColumn) {
+    getLegalTargets(startRow: number, startColumn: number) {
         return allLogicalLegalMovesForCell(this, { startRow, startColumn }).map(({ finalCell }) => finalCell)
     }
 
-    static oppositeColor(color) {
+    static oppositeColor(color?: Color) {
         return color === colors[0] ? colors[1] : colors[0];
     }
 
-    static computeGrid(grid, update) {
-        let gridCopy = deepCopy2DArr(grid);
-        update.forEach(({ indices: { row, column }, value }) => {
+    static computeGrid(grid: Grid, updates: GridUpdate[]) {
+        let gridCopy = deepGridCopy(grid);
+        updates.forEach(({ indices: { row, column }, value }) => {
             gridCopy[row][column] = value;
         });
         return gridCopy;
     }
 
-    static handleMove(finalRow, finalColumn, startRow, startColumn) {
+    static handleMove(finalRow: number, finalColumn: number, startRow: number, startColumn: number): void {
         const finalCell = state.grid[finalRow][finalColumn];
-        if (finalCell !== EMPTY_VALUE || (finalRow === -1 && finalColumn === -1))
-            return state.updateUI();
+        if (finalCell !== EMPTY_VALUE || (finalRow === -1 && finalColumn === -1)) {
+            state.updateUI();
+            return;
+        }
+
 
         let updates = generateGridUpdatesForMoveIfLegal(state, { finalRow, finalColumn, startRow, startColumn });
         if (updates.length > 0) { //was legal move...
@@ -278,9 +291,10 @@ class BoardState {
         stack.splice(idx + 1);
     }
 
-    static startSession({ grid, turn }) {
+    static startSession({ grid, turn }: { grid: string; turn: Color }) {
         const regularBoardSetup = changeGridStringToNumbers(grid).trim().split("\n").map(r => r.trim());
-        const matrix = new Array(regularBoardSetup.length).fill(new Array(regularBoardSetup[0].length).fill(0)).map((row, rIndex) => row.map((cell, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex))));
+        const raw: Grid = Array.from({ length: 8 }, () => Array.from({ length: 8 }));
+        const matrix = raw.map((row, rIndex) => row.map((_, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex))));
         return new BoardState(matrix, turn).updateUI()
     }
 
@@ -295,7 +309,7 @@ class BoardState {
     }
 }
 
-function generateGridUpdatesForMoveIfLegal(state, { finalRow, finalColumn, startRow, startColumn }) {
+function generateGridUpdatesForMoveIfLegal(state: BoardState, { finalRow, finalColumn, startRow, startColumn }: FinalCell & StartCell) {
     const logicalMoves = allLogicalLegalMovesForCell(state, { startRow, startColumn });
     const specificMove = logicalMoves.find((({ finalCell }) => finalCell.row === finalRow && finalCell.column === finalColumn))
     if (!specificMove) return [];
@@ -308,7 +322,7 @@ function generateGridUpdatesForMoveIfLegal(state, { finalRow, finalColumn, start
     return updates;
 }
 
-function allLogicalLegalMovesForCell({ grid, flaggedCell, currentTurn }, { startRow, startColumn }) {
+function allLogicalLegalMovesForCell({ grid, flaggedCell, currentTurn }: BoardState, { startRow, startColumn }: StartCell) {
     const startCell = grid[startRow][startColumn];
     if (
         startCell === EMPTY_VALUE ||
@@ -321,20 +335,24 @@ function allLogicalLegalMovesForCell({ grid, flaggedCell, currentTurn }, { start
         : allLegalNonEatingMovesForCell(grid, startRow, startColumn)
 }
 
-function isThereAnEatingPossibilityForGivenColor(grid, color) {
+function isThereAnEatingPossibilityForGivenColor(grid: Grid, color?: Color) {
     return allCellsForColor(grid, color).some(({ row, column }) => allLegalEatingMovesForCell(grid, row, column).length > 0);
 }
 
 
-function colorForCell(gridVal) {
+function colorForCell(gridVal: number) {
     return gridVal !== EMPTY_VALUE ? pieces[gridVal].split("-")[0] : "empty";
 }
 
+type PotentialMoves = {
+    finalCell: Cell;
+    updates: GridUpdate[];
+}[];
 
-function allLegalEatingMovesForCell(grid, startRow, startColumn) {
+function allLegalEatingMovesForCell(grid: Grid, startRow: number, startColumn: number) {
     const eatingDxs = [2, -2];
-    let possibleEatings = [];
-    let startCell = grid[startRow][startColumn];
+    const possibleEatings: PotentialMoves = [];
+    const startCell = grid[startRow][startColumn];
 
     if (startCell === EMPTY_VALUE)
         return possibleEatings;
@@ -366,10 +384,10 @@ function allLegalEatingMovesForCell(grid, startRow, startColumn) {
     return possibleEatings;
 }
 
-function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
+function allLegalNonEatingMovesForCell(grid: Grid, startRow: number, startColumn: number) {
     const movingDxs = [1, -1];
 
-    let possibleMovings = [];
+    let possibleMovings: PotentialMoves = [];
     let startCell = grid[startRow][startColumn];
     if (startCell === EMPTY_VALUE)
         return possibleMovings;
@@ -393,32 +411,32 @@ function allLegalNonEatingMovesForCell(grid, startRow, startColumn) {
     return possibleMovings;
 }
 
-function allCellsForColor(grid, color) {
-    const cells = [];
-    forEach((row, column) => {
+function allCellsForColor(grid: Grid, color?: Color) {
+    const cells: Cell[] = [];
+    forEach((row: number, column: number) => {
         if (colorForCell(grid[row][column]) === color)
             cells.push({ row, column })
     })
     return cells;
 }
 
-function didColorLose(grid, color) {
+function didColorLose(grid: Grid, color: Color) {
     return !allCellsForColor(grid, color).some(({ row, column }) => allLegalEatingMovesForCell(grid, row, column).length > 0 || allLegalNonEatingMovesForCell(grid, row, column).length > 0);
 }
 
-const deepCopy2DArr = (arr) => arr.map((r) => r.map((c) => c));
+const deepGridCopy = (arr: Grid): Grid => arr.map((r) => r.map((c) => c)) as Grid;
 
 
-function areRowsOutOfBounds(...indices) {
+function areRowsOutOfBounds(...indices: number[]) {
     return indices.some(row => row >= 8 || row < 0);
 }
 
-function areColumnsOutOfBounds(...indices) {
+function areColumnsOutOfBounds(...indices: number[]) {
     return indices.some(column => column >= 8 || column < 0);
 }
 
-function changeGridStringToNumbers(gridstring) {
-    return ["b", "B", "r", "R", "-"].reduce((grid, alias, i) => grid.replaceAll(alias, i), gridstring)
+function changeGridStringToNumbers(gridstring: string) {
+    return ["b", "B", "r", "R", "-"].reduce((grid, alias, i) => grid.replaceAll(alias, String(i)), gridstring)
 }
 
 const storageBackend = (() => {
@@ -430,7 +448,7 @@ const storageBackend = (() => {
 
     const fromLocalStorage = () => {
         try {
-            return JSON.parse(localStorage.getItem(STATE));
+            return JSON.parse(localStorage.getItem(STATE)!);
         } catch (ex) {
             return;
         }
@@ -498,7 +516,7 @@ dom.registerShare(() => {
     })
 })
 dom.registerReset(resetGame);
-dom.registerHover((row, column) => state.updateUI(state.getLegalTargets(row, column)))
+dom.registerHover((row: number, column: number) => state.updateUI(state.getLegalTargets(row, column)))
 
 dom.registerUndo(
     () => {
