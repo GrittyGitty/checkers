@@ -17,12 +17,9 @@ export function generateGridUpdatesForMoveIfLegal(boardState: BoardState, { fina
   return updates;
 }
 
-function allLogicalLegalMovesForCell({ grid, flaggedCell, turn }: BoardState, { startRow, startColumn }: StartCell) {
+function allLogicalLegalMovesForCell({ grid, turn }: BoardState, { startRow, startColumn }: StartCell) {
   const startCell = grid[startRow][startColumn];
-  if (
-    startCell === EMPTY_VALUE ||
-    colorForCell(startCell) !== turn ||
-    (startRow === flaggedCell?.row && startColumn === flaggedCell?.column)
+  if (startCell === EMPTY_VALUE || colorForCell(startCell) !== turn
   )
     return [];
   return isThereAnEatingPossibilityForGivenColor(grid, colorForCell(grid[startRow][startColumn]))
@@ -154,7 +151,10 @@ export class BoardState {
   }
 
   getPiecesThatCanMove() {
-    return allCellsForColor(this.grid, this.turn).filter(({ row, column }) => this.getLegalTargets(row, column).length);
+    return (this.flaggedCell
+      ? [this.flaggedCell]
+      : allCellsForColor(this.grid, this.turn))
+      .filter(({ row, column }) => this.getLegalTargets(row, column).length);
   }
 
   getLegalTargets(startRow: number, startColumn: number) {
