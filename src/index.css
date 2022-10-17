@@ -104,19 +104,19 @@ td,
 }
 
 .piece-black {
-    background-image: url("/black.png");
+    background-image: url("/black.webp");
 }
 
 .piece-black-king {
-    background-image: url("/black-king.png");
+    background-image: url("/black-king.webp");
 }
 
 .piece-red {
-    background-image: url("/red.png");
+    background-image: url("/red.webp");
 }
 
 .piece-red-king {
-    background-image: url("/red-king.png");
+    background-image: url("/red-king.webp");
 }
 
 
