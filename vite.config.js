@@ -5,6 +5,5 @@ export default {
   build: {
     sourcemap: true,
   },
-  base: "./",
-  plugins: [viteSingleFile({ inlinePattern: ["assets/*.css", "cellsize.js"], useRecommendedBuildConfig: false })]
+  base: "./"
 }
