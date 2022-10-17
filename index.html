@@ -7,7 +7,6 @@
     <meta name="description" content="PVP vanilla checkers, author: Netanel Haber">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVP vanilla checkers</title>
-    
     <link rel="preload" as="image" href="./red.webp" />
     <link rel="preload" as="image" href="./black.webp" />
     <link rel="preload" as="image" href="./red-king.webp" />
@@ -20,11 +19,174 @@
         set();
         window.addEventListener("resize", set);
     </script>
-  <script type="module" crossorigin src="./assets/index.aa538f46.js"></script>
-  <style>
-*{font-family:Palatino Linotype,Book Antiqua,Palatino,serif;font-size:1.05em}html{height:100vh;width:100vw}body{height:100%;margin:auto;background-image:linear-gradient(rgba(73,85,80,.92),#33234d)}#turnDiv{margin:10px auto auto;border-radius:50%;background-color:#3cb4d9}#containerTurn{text-align:center;padding:10px;color:#f9fff9}#containerBoard{margin:auto;display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:wrap;width:95%;height:100%}table{background-color:#f0f8ff;border-collapse:collapse;box-shadow:10px 10px 30px gray;touch-action:none}[class^=piece]{background-position:center;background-size:90% 90%;background-repeat:no-repeat;user-select:none}[class^=piece]:not(piece-empty){touch-action:none}#trailingDiv{position:absolute;cursor:grabbing;transform:translate(-1000px,-1000px);top:0px;left:0px}tr:nth-child(odd) td:nth-child(even),tr:nth-child(even) td:nth-child(odd){background-color:#3cb4d9}@keyframes flickerAnimation{0%{opacity:.4}to{opacity:.5}}.legal-target{opacity:.4;animation:flickerAnimation .75s infinite}.can-move{filter:drop-shadow(2px 2px 2px rgb(1,5,15));cursor:grab}.can-move:active{cursor:grabbing;opacity:80%}td,#trailingDiv,#turnDiv{width:var(--cellsize);height:var(--cellsize);padding:0}.piece-black{background-image:url(../black.webp)}.piece-black-king{background-image:url(../black-king.webp)}.piece-red{background-image:url(../red.webp)}.piece-red-king{background-image:url(../red-king.webp)}.toast{text-align:center;background-image:linear-gradient(rgb(73,85,80),#18214a);border:1px solid #00e4f08b;color:#fff;padding:8px;bottom:20px;left:50%;width:-50%;position:fixed;z-index:10000;transform:translate(-50%)}.buttons{padding:20px;margin-top:20px;display:flex;flex-wrap:wrap;gap:6px;width:150px}.buttons button{flex:1;width:72px;height:53px}#github{gap:5px;display:flex;flex-direction:column;align-items:center;position:absolute;bottom:10px;right:10px;font-size:.8rem;color:#fff;text-decoration:none}#github img{width:32px;height:32px}
+    <style>* {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    font-size: 1.05em;
+}
 
-</style>
+html {
+    height: 100vh;
+    width: 100vw;
+}
+
+body {
+    height: 100%;
+    margin: auto;
+    background-image: linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
+}
+
+#turnDiv {
+    margin: auto;
+    margin-top: 10px;
+    border-radius: 50%;
+    background-color: rgb(60, 180, 217);
+}
+
+#containerTurn {
+    text-align: center;
+    padding: 10px;
+    color: rgb(249, 255, 249);
+}
+
+#containerBoard {
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 95%;
+    height: 100%;
+}
+
+table {
+    background-color: rgb(240, 248, 255);
+    border-collapse: collapse;
+    box-shadow: 10px 10px 30px grey;
+    touch-action: none;
+}
+
+[class^=piece] {
+    background-position: center;
+    background-size: 90% 90%;
+    background-repeat: no-repeat;
+    user-select: none;
+}
+
+[class^=piece]:not(piece-empty) {
+    touch-action: none;
+}
+
+#trailingDiv {
+    position: absolute;
+    cursor: grabbing;
+    transform: translate(-1000px, -1000px);
+    top: 0px;
+    left: 0px;
+}
+
+tr:nth-child(odd) td:nth-child(even),
+tr:nth-child(even) td:nth-child(odd) {
+    background-color: rgb(60, 180, 217);
+}
+
+@keyframes flickerAnimation {
+    0% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
+}
+
+.legal-target {
+    opacity: 0.4;
+    animation: flickerAnimation 0.75s infinite;
+}
+
+.can-move {
+    filter: drop-shadow(2px 2px 2px rgb(1, 5, 15));
+    cursor: grab;
+}
+
+.can-move:active {
+    cursor: grabbing;
+    opacity: 80%;
+}
+
+td,
+#trailingDiv,
+#turnDiv {
+    width: var(--cellsize);
+    height: var(--cellsize);
+    padding: 0;
+}
+
+.piece-black {
+    background-image: url("black.webp");
+}
+
+.piece-black-king {
+    background-image: url("black-king.webp");
+}
+
+.piece-red {
+    background-image: url("red.webp");
+}
+
+.piece-red-king {
+    background-image: url("red-king.webp");
+}
+
+.toast {
+    text-align: center;
+    background-image: linear-gradient(rgb(73, 85, 80), #18214a);
+    border: 1px solid #00e4f08b;
+    color: white;
+    padding: 8px;
+    bottom: 20px;
+    left: 50%;
+    width: -50%;
+    position: fixed;
+    z-index: 10000;
+    transform: translateX(-50%);
+}
+
+.buttons {
+    padding: 20px;
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 150px;
+}
+
+.buttons button {
+    flex: 1;
+    width: 72px;
+    height: 53px;
+}
+
+#github {
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 0.8rem;
+    color: white;
+    text-decoration: none;
+}
+
+#github img {
+    width: 32px;
+    height: 32px;
+}
+    </style>
+  <script type="module" crossorigin src="./assets/index.ee01fd2c.js"></script>
 </head>
 
 <body>
