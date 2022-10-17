@@ -1,6 +1,6 @@
 # checkers
 [Play](https://netanel-haber.github.io/checkers/) vanilla TS, html and css pvp checkers started a trillion years ago, before I could tell a div from a span. 
-Now with Vite (see 40 commits relating to writing a build script).
+Now with Vite.
 
 
 **Features:**
