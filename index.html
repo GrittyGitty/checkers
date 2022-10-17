@@ -13,7 +13,7 @@
     <link rel="preload" as="image" href="./black-king.webp" />
     <script>
         function set() {
-            let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.085, 67);
+            let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.121, 67);
             document.documentElement.style.setProperty('--cellsize', `${cell_size}px`);
         }
         set();
@@ -181,11 +181,6 @@ td,
     text-decoration: none;
 }
 
-#github-workflow {
-    width: 90px;
-    height: auto;
-}
-
 #github-icon {
     width: 32px;
     height: 32px;
@@ -291,8 +286,6 @@ td,
     </div>
     <a target="_blank" rel="noopener noreferrer" href="https://github.com/netanel-haber/checkers" id="github">
         <img id="github-icon" src="./github-icon.webp" />
-        <img id="github-workflow"
-            src="https://github.com/netanel-haber/checkers/actions/workflows/node.js.yml/badge.svg" />
     </a>
     
 </body>
