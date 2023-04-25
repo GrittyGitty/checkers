@@ -19,6 +19,7 @@
     "skipLibCheck": true
   },
   "include": [
-    "src"
+    "src",
+    ".eslintrc.cjs"
   ]
 }

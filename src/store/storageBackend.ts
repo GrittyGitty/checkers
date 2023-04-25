@@ -1,5 +1,4 @@
-import { Color, SerializedState } from "../types";
-
+import { Color, type SerializedState } from "../types";
 
 export const defaultSetup = {
   turn: Color.black,
@@ -12,23 +11,26 @@ r-r-r-r-
 b-b-b-b-
 -b-b-b-b
 b-b-b-b-
-`.trim().split("\n").filter(Boolean).join("\n")
+`
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .join("\n"),
 };
-
-
 
 const STATE = "state";
 const GRID = "grid";
 const TURN = "turn";
 const { pathname, href } = window.location;
 
-
 const fromLocalStorage = () => {
   try {
-    return JSON.parse(localStorage.getItem(STATE)!);
-  } catch (ex) {
-    return;
-  }
+    const item = localStorage.getItem(STATE);
+    if (!item) {
+      throw new Error("State Not Found");
+    }
+    return JSON.parse(item);
+  } catch (ex) {}
 };
 const fromParams = () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -37,17 +39,18 @@ const fromParams = () => {
   return grid ? { grid, turn } : undefined;
 };
 
-const fetch = (): SerializedState => (window.location.search ? fromParams() : fromLocalStorage()) || defaultSetup;
+const fetch = (): SerializedState =>
+  (window.location.search ? fromParams() : fromLocalStorage()) || defaultSetup;
 
 const persist = ({ grid, turn } = defaultSetup) => {
   const params = new URLSearchParams();
   params.set(GRID, grid);
   params.set(TURN, turn);
-  history.pushState(null, '', `${pathname}?${params.toString()}`);
+  history.pushState(null, "", `${pathname}?${params.toString()}`);
   localStorage.setItem(STATE, JSON.stringify({ grid, turn }));
 };
 const reset = () => {
-  history.pushState(null, '', pathname);
+  history.pushState(null, "", pathname);
   localStorage.removeItem(STATE);
 };
 
@@ -56,10 +59,7 @@ function compileSharingUrl() {
   const { grid, turn } = fetch();
   params.set(GRID, grid);
   params.set(TURN, turn);
-  return `${href.split('?')[0]}?${params.toString()}`;
+  return `${href.split("?")[0]}?${params.toString()}`;
 }
 
-
-
 export const storageBackend = { fetch, persist, reset, compileSharingUrl };
-

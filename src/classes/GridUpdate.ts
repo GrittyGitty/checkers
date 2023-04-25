@@ -1,5 +1,5 @@
 import { EMPTY_VALUE } from "../consts";
-import { Cell, FinalCell } from "../types";
+import { type Cell, type FinalCell } from "../types";
 
 export class GridUpdate {
   indices: Cell;
@@ -10,15 +10,21 @@ export class GridUpdate {
     this.value = value;
   }
 
-  static updateFactory(final: FinalCell, finalVal: number, ...remove: GridUpdate[]) {
-    let updates = [];
+  static updateFactory(
+    final: FinalCell,
+    finalVal: number,
+    ...remove: GridUpdate[]
+  ) {
+    const updates = [];
     updates.push(new GridUpdate(final.finalRow, final.finalColumn, finalVal));
-    remove.forEach(({ indices }) => updates.push(new GridUpdate(indices.row, indices.column)));
+    remove.forEach(({ indices }) =>
+      updates.push(new GridUpdate(indices.row, indices.column))
+    );
     return updates;
   }
 }
 
-export type PotentialMoves = {
+export type PotentialMoves = Array<{
   finalCell: Cell;
   updates: GridUpdate[];
-}[];
+}>;

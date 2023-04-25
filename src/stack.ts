@@ -1,10 +1,9 @@
 import { defaultSetup } from "./store/storageBackend";
 import { store } from "./store/store";
-import { SerializedState } from "./types";
+import { type SerializedState } from "./types";
 
 let _stack = [store.serialized];
 let idx = 0;
-
 
 export const stack = {
   resetStack: () => {
@@ -22,5 +21,5 @@ export const stack = {
   },
   get isEnd() {
     return idx === _stack.length - 1;
-  }
-}
+  },
+};

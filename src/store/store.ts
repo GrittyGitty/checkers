@@ -12,5 +12,5 @@ export const store = {
   reset,
   get share() {
     return compileSharingUrl();
-  }
+  },
 };
