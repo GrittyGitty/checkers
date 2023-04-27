@@ -2,10 +2,12 @@ import { colors, EMPTY_VALUE, pieces } from "./consts";
 import { type Color } from "./types";
 
 export const clsx = (bag: Record<string, unknown>, ...strings: string[]) => {
-  const filtered = Object.entries(bag)
-    .filter(([, v]) => Boolean(v))
-    .map(([cls]) => cls);
-  return [...strings, ...filtered].join(" ");
+  for (const [cls, truthy] of Object.entries(bag)) {
+    if (truthy) {
+      strings.push(cls);
+    }
+  }
+  return strings.join(" ");
 };
 
 export function forEachCell(cb: (row: number, column: number) => void) {

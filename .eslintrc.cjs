@@ -1,7 +1,7 @@
 module.exports = {
   env: {
     browser: true,
-    es2021: true
+    es2021: true,
   },
   extends: ["standard-with-typescript", "prettier"],
   parser: "@typescript-eslint/parser",
@@ -9,7 +9,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "latest",
     sourceType: "module",
-    project: ["./tsconfig.json"]
+    project: ["./tsconfig.json"],
   },
   rules: {
     "prettier/prettier": ["error"],
@@ -19,12 +19,12 @@ module.exports = {
       "error",
       "double",
       {
-        allowTemplateLiterals: true
-      }
+        allowTemplateLiterals: true,
+      },
     ],
     "@typescript-eslint/semi": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-    "@typescript-eslint/strict-boolean-expressions": "off"
-  }
-}
+    "@typescript-eslint/strict-boolean-expressions": "off",
+  },
+};
