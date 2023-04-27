@@ -230,7 +230,7 @@ export const dom = {
   registerHover(highlightHovered: (row: number, column: number) => void) {
     forEachDomCell(({ domCell, row, column }) => {
       mouseover(domCell, () => {
-        highlightHovered(row, column);
+        if (!dragging) highlightHovered(row, column);
       });
     });
   },

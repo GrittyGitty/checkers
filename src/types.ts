@@ -8,7 +8,7 @@ export type EventMapSubset<V extends ValueOf<EventMap>> = KeysForValue<
   V
 >;
 
-export enum Color {
+export const enum Color {
   "black" = "black",
   "red" = "red",
 }
