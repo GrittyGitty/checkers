@@ -8,7 +8,7 @@ import {
   type EventCoords,
   type StateControllers,
 } from "../types";
-import { forEachCell, clsx } from "../utils";
+import { forEachCell } from "../utils";
 
 const $ = <E extends HTMLElement = HTMLElement>(id: string) => {
   const element = document.getElementById(id);
@@ -53,35 +53,35 @@ const createCellInListChecker = (list: Cell[]) => {
 let dragging = false;
 
 const forEachDomCell = (
-  doThis: (cell: Cell & { domCell: HTMLTableCellElement }) => void
+  doThis: (row: number, column: number, domCell: HTMLTableCellElement) => void
 ) => {
   forEachCell((row: number, column: number) => {
-    doThis({ row, column, domCell: getDomCell(row, column) });
+    doThis(row, column, getDomCell(row, column));
   });
 };
 
 const renderClasses = (
   grid: Grid,
-  {
-    legalTargets,
-    piecesThatCanMove,
-    turn,
-  }: { turn: Color; legalTargets: Cell[]; piecesThatCanMove: Cell[] }
+  turn: Color,
+  legalTargets: Cell[],
+  piecesThatCanMove: Cell[]
 ) => {
   turnDiv.className = colorToClass[turn];
   undo.disabled = stack.isEmpty;
   redo.disabled = stack.isEnd;
   const isLegalTargetForHoveredCell = createCellInListChecker(legalTargets);
   const canMove = createCellInListChecker(piecesThatCanMove);
-  forEachDomCell(({ row, column, domCell }) => {
+  forEachDomCell((row, column, domCell) => {
     const cellVal = grid[row][column];
-    const newValue = clsx(
-      {
-        [LEGAL_TARGET]: isLegalTargetForHoveredCell(row, column),
-        [CAN_MOVE]: canMove(row, column) && !dragging,
-      },
-      pieceClasses[cellVal]
-    );
+    const piece = pieceClasses[cellVal];
+    let newValue = `${piece} `;
+    if (isLegalTargetForHoveredCell(row, column)) {
+      newValue += `${LEGAL_TARGET} `;
+    }
+    if (!dragging && canMove(row, column)) {
+      newValue += CAN_MOVE;
+    }
+
     if (domCell.className !== newValue) {
       domCell.className = newValue;
     }
@@ -211,7 +211,7 @@ export const dom = {
     legalTargets: Cell[];
     piecesThatCanMove: Cell[];
   }) {
-    renderClasses(grid, { legalTargets, piecesThatCanMove, turn });
+    renderClasses(grid, turn, legalTargets, piecesThatCanMove);
   },
   registerShare: (cb: (e: MouseEvent) => void) => {
     click(share, cb);
@@ -228,7 +228,7 @@ export const dom = {
     click(reset, cb);
   },
   registerHover(highlightHovered: (row: number, column: number) => void) {
-    forEachDomCell(({ domCell, row, column }) => {
+    forEachDomCell((row, column, domCell) => {
       mouseover(domCell, () => {
         if (!dragging) highlightHovered(row, column);
       });

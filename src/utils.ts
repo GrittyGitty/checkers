@@ -1,15 +1,6 @@
 import { colors, EMPTY_VALUE, pieces } from "./consts";
 import { type Color } from "./types";
 
-export const clsx = (bag: Record<string, unknown>, ...strings: string[]) => {
-  for (const [cls, truthy] of Object.entries(bag)) {
-    if (truthy) {
-      strings.push(cls);
-    }
-  }
-  return strings.join(" ");
-};
-
 export function forEachCell(cb: (row: number, column: number) => void) {
   for (let row = 0; row < 8; row++) {
     for (let column = 0; column < 8; column++) {
