@@ -26,7 +26,10 @@
     "pre-commit": "^1.2.2",
     "prettier": "2.8.8",
     "typescript": "^5.0.4",
-    "vite": "^4.3.2"
+    "vite": "^4.3.2",
+    "vitest": "^0.31.1"
   },
-  "pre-commit": ["lint"]
+  "pre-commit": [
+    "lint"
+  ]
 }
