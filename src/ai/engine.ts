@@ -33,7 +33,7 @@ export const calculateScore = ({ grid, turn }: BoardState) => {
   return score;
 };
 
-const DEPTH = 6;
+const DEPTH = 5;
 
 type BestMove = {
   score: number;
