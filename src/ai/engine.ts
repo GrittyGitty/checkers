@@ -2,6 +2,8 @@ import {
   generateGridUpdatesForMoveIfLegal,
   type BoardState,
 } from "../classes/BoardState";
+import { COMPUTER } from "../consts";
+import { type StateControllers } from "../types";
 
 import { forEachCell, gridValToColor } from "../utils";
 
@@ -31,28 +33,68 @@ export const calculateScore = ({ grid, turn }: BoardState) => {
   return score;
 };
 
-const DEPTH = 1;
+const DEPTH = 6;
 
-function diffs(state: BoardState, currentScore: number) {
+type BestMove = {
+  score: number;
+  move: {
+    finalRow: number;
+    finalColumn: number;
+    startRow: number;
+    startColumn: number;
+  };
+};
+
+function bestMove(state: BoardState, depth = DEPTH): BestMove {
+  const currentScore = calculateScore(state);
+  let best: BestMove = {
+    score: 0,
+    move: { finalColumn: 0, finalRow: 0, startColumn: 0, startRow: 0 },
+  };
+
+  const states: BoardState[] = [];
   for (const { row, column } of state.getPiecesThatCanMove()) {
     for (const { row: finalRow, column: finalColumn } of state.getLegalTargets(
       row,
       column
     )) {
-      const updates = generateGridUpdatesForMoveIfLegal(state, {
+      const move = {
         finalRow,
         finalColumn,
         startRow: row,
         startColumn: column,
-      });
+      };
+      const updates = generateGridUpdatesForMoveIfLegal(state, move);
       const newState = state.updatedGrid(updates);
+      states.push(newState);
       const score = calculateScore(newState);
-      const diff = score - currentScore;
+      let diff = score - currentScore;
+      if (depth) {
+        diff += bestMove(newState.updateCurrentTurn(), depth - 1).score;
+      }
+      if (diff >= best.score) {
+        best = { score: diff, move };
+      }
     }
   }
+
+  return best;
 }
 
-export const next = (state: BoardState) => {
-  const currentScore = calculateScore(state);
-  diffs(state, currentScore);
+export const doAiMove = (
+  state: BoardState,
+  handleMove: StateControllers["handleMove"]
+) => {
+  if (state.turn !== COMPUTER) return;
+  setTimeout(() => {
+    const t0 = performance.now();
+    const {
+      move: { finalRow, finalColumn, startRow, startColumn },
+    } = bestMove(state);
+    const elapsed = performance.now() - t0;
+    const maxiumum400 = Math.max(400 - elapsed, 0);
+    setTimeout(() => {
+      handleMove(finalRow, finalColumn, startRow, startColumn);
+    }, maxiumum400);
+  }, 50);
 };

@@ -26,6 +26,7 @@ const reset = $("reset");
 const share = $("share");
 const undo = $<HTMLButtonElement>("undo");
 const redo = $<HTMLButtonElement>("redo");
+const ai = $<HTMLLabelElement>("ai");
 
 const add =
   <K extends keyof HTMLElementEventMap>(e: K) =>
@@ -236,5 +237,8 @@ export const dom = {
   },
   registerDrag(controllers: StateControllers) {
     createDrag(controllers);
+  },
+  registerAi(onClick: VoidFunction) {
+    click(ai, onClick);
   },
 };

@@ -12,8 +12,10 @@ import { stack } from "./stack";
 import { store } from "./store/store";
 import { toast } from "./dom/toast";
 import { type Cell, type SerializedState } from "./types";
-import { next } from "./ai/engine";
+import { doAiMove } from "./ai/engine";
 import { computeGridFromString, defaultSetup } from "./utils";
+
+let ai = true;
 
 function handleMove(
   finalRow: number,
@@ -56,7 +58,8 @@ function handleMove(
   const serialized = state.serialize();
   store.serialized = serialized;
   stack.add(serialized);
-  next(state);
+  if (!ai) return;
+  doAiMove(state, handleMove);
 }
 
 function startSession({ grid, turn }: SerializedState) {
@@ -113,3 +116,7 @@ dom.registerUndo(
     store.serialized = state.serialize();
   }
 );
+dom.registerAi(() => {
+  ai = !ai;
+  if (ai) doAiMove(state, handleMove);
+});
