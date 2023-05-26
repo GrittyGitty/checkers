@@ -12,4 +12,4 @@ Now with Vite.
 
 **Todo:**
 * Websockets
-* AI
+* AI - This sucks right now
