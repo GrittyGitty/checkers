@@ -8,12 +8,12 @@ import { EMPTY_VALUE, pieces } from "./consts";
 import { dom } from "./dom/dom";
 import { GridUpdate } from "./classes/GridUpdate";
 import { stack } from "./stack";
-import { defaultSetup } from "./store/storageBackend";
+
 import { store } from "./store/store";
 import { toast } from "./dom/toast";
-import { type Cell, type Grid, type SerializedState } from "./types";
-import { changeGridStringToNumbers } from "./utils";
+import { type Cell, type SerializedState } from "./types";
 import { next } from "./ai/engine";
+import { computeGridFromString, defaultSetup } from "./utils";
 
 function handleMove(
   finalRow: number,
@@ -60,14 +60,7 @@ function handleMove(
 }
 
 function startSession({ grid, turn }: SerializedState) {
-  const regularBoardSetup = changeGridStringToNumbers(grid)
-    .trim()
-    .split("\n")
-    .map((r) => r.trim());
-  const raw: Grid = Array.from({ length: 8 }, () => Array.from({ length: 8 }));
-  const matrix = raw.map((row, rIndex) =>
-    row.map((_, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex)))
-  );
+  const matrix = computeGridFromString(grid);
   return updateUI(new BoardState(matrix, turn));
 }
 

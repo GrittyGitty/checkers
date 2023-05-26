@@ -1,5 +1,5 @@
 import { colors, EMPTY_VALUE, pieces } from "./consts";
-import { type Color } from "./types";
+import { Color, type Grid } from "./types";
 
 export function forEachCell(cb: (row: number, column: number) => void) {
   for (let row = 0; row < 8; row++) {
@@ -23,3 +23,32 @@ export function changeGridStringToNumbers(gridstring: string) {
 export function oppositeColor(color?: Color) {
   return color === colors[0] ? colors[1] : colors[0];
 }
+
+export const defaultSetup = {
+  turn: Color.black,
+  grid: `
+-r-r-r-r
+r-r-r-r-
+-r-r-r-r
+--------
+--------
+b-b-b-b-
+-b-b-b-b
+b-b-b-b-
+`
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .join("\n"),
+};
+
+export const computeGridFromString = (grid: string): Grid => {
+  const regularBoardSetup = changeGridStringToNumbers(grid)
+    .trim()
+    .split("\n")
+    .map((r) => r.trim());
+  const raw: Grid = Array.from({ length: 8 }, () => Array.from({ length: 8 }));
+  return raw.map((row, rIndex) =>
+    row.map((_, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex)))
+  );
+};

@@ -1,22 +1,5 @@
-import { Color, type SerializedState } from "../types";
-
-export const defaultSetup = {
-  turn: Color.black,
-  grid: `
--r-r-r-r
-r-r-r-r-
--r-r-r-r
---------
---------
-b-b-b-b-
--b-b-b-b
-b-b-b-b-
-`
-    .trim()
-    .split("\n")
-    .filter(Boolean)
-    .join("\n"),
-};
+import { type SerializedState } from "../types";
+import { defaultSetup } from "../utils";
 
 const STATE = "state";
 const GRID = "grid";

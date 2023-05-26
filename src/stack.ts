@@ -1,6 +1,6 @@
-import { defaultSetup } from "./store/storageBackend";
 import { store } from "./store/store";
 import { type SerializedState } from "./types";
+import { defaultSetup } from "./utils";
 
 let _stack = [store.serialized];
 let idx = 0;
