@@ -215,6 +215,19 @@ export class BoardState {
     return new BoardState(grid, oppositeColor(this.turn));
   }
 
+  getAllLegalMovesForColor() {
+    return allCellsForColor(this.grid, this.turn).map(
+      (cell) =>
+        [
+          cell,
+          allLogicalLegalMovesForCell(this, {
+            startRow: cell.row,
+            startColumn: cell.column,
+          }),
+        ] as const
+    );
+  }
+
   getPiecesThatCanMove() {
     return (
       this.flaggedCell != null

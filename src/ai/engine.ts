@@ -1,7 +1,4 @@
-import {
-  generateGridUpdatesForMoveIfLegal,
-  type BoardState,
-} from "../classes/BoardState";
+import { type BoardState } from "../classes/BoardState";
 import { COMPUTER } from "../consts";
 import { type StateControllers } from "../types";
 
@@ -16,17 +13,12 @@ export const calculateScore = ({ grid, turn }: BoardState) => {
     let value = 0;
     switch (cell) {
       case 0:
-        value = 1;
-        break;
-      case 1:
-        value = 2;
-        break;
       case 2:
         value = 1;
         break;
+      case 1:
       case 3:
         value = 2;
-        break;
     }
     score += color === turn ? value : -value;
   });
@@ -45,39 +37,46 @@ type BestMove = {
   };
 };
 
-function bestMove(state: BoardState, depth = DEPTH): BestMove {
-  const currentScore = calculateScore(state);
+function bestMove(state: BoardState) {
+  function bestScore(state: BoardState, depth = DEPTH) {
+    if (!depth) {
+      return calculateScore(state);
+    }
+
+    let max = 0;
+    for (const [, potentialMoves] of state.getAllLegalMovesForColor()) {
+      for (const { updates } of potentialMoves) {
+        const score = bestScore(
+          state.updatedGrid(updates).updateCurrentTurn(),
+          depth - 1
+        );
+        if (score >= max) {
+          max = score;
+        }
+      }
+    }
+    return max;
+  }
   let best: BestMove = {
     score: 0,
     move: { finalColumn: 0, finalRow: 0, startColumn: 0, startRow: 0 },
   };
-
-  const states: BoardState[] = [];
-  for (const { row, column } of state.getPiecesThatCanMove()) {
-    for (const { row: finalRow, column: finalColumn } of state.getLegalTargets(
-      row,
-      column
-    )) {
-      const move = {
-        finalRow,
-        finalColumn,
-        startRow: row,
-        startColumn: column,
-      };
-      const updates = generateGridUpdatesForMoveIfLegal(state, move);
-      const newState = state.updatedGrid(updates);
-      states.push(newState);
-      const score = calculateScore(newState);
-      let diff = score - currentScore;
-      if (depth) {
-        diff += bestMove(newState.updateCurrentTurn(), depth - 1).score;
-      }
-      if (diff >= best.score) {
-        best = { score: diff, move };
+  for (const [cell, potentialMoves] of state.getAllLegalMovesForColor()) {
+    for (const { updates, finalCell } of potentialMoves) {
+      const score = bestScore(state.updatedGrid(updates).updateCurrentTurn());
+      if (score >= best.score) {
+        best = {
+          score,
+          move: {
+            startRow: cell.row,
+            startColumn: cell.column,
+            finalRow: finalCell.row,
+            finalColumn: finalCell.column,
+          },
+        };
       }
     }
   }
-
   return best;
 }
 
@@ -90,9 +89,12 @@ export const doAiMove = (
     const t0 = performance.now();
     const {
       move: { finalRow, finalColumn, startRow, startColumn },
+      score,
     } = bestMove(state);
+    console.log(score);
+
     const elapsed = performance.now() - t0;
-    const maxiumum400 = Math.max(400 - elapsed, 0);
+    const maxiumum400 = Math.max(250 - elapsed, 0);
     setTimeout(() => {
       handleMove(finalRow, finalColumn, startRow, startColumn);
     }, maxiumum400);
