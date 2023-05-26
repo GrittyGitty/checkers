@@ -1,14 +1,18 @@
 import { it, expect } from "vitest";
-import { score } from "./engine";
+import { calculateScore } from "./engine";
 
 import { Color } from "../types";
 import { computeGridFromString, defaultSetup } from "../utils";
+import { BoardState } from "../classes/BoardState";
 
-const base = computeGridFromString(defaultSetup.grid);
+const base = new BoardState(
+  computeGridFromString(defaultSetup.grid),
+  Color.black
+);
 
 it("calculates score correctly", () => {
-  let result = score(base, Color.black);
-  expect(result).toBe(24);
-  result = score(base, Color.red);
-  expect(result).toBe(24);
+  let result = calculateScore(base);
+  expect(result).toBe(0);
+  result = calculateScore(base);
+  expect(result).toBe(0);
 });

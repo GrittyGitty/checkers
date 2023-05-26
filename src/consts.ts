@@ -6,4 +6,6 @@ const eatingDys = movingDys.map((dirs) => dirs.map((d) => d * 2));
 const colors = [Color.black, Color.red] as const;
 const EMPTY_VALUE = pieces.length - 1;
 
-export { pieces, movingDys, eatingDys, colors, EMPTY_VALUE };
+const COMPUTER = Color.red;
+
+export { pieces, movingDys, eatingDys, colors, EMPTY_VALUE, COMPUTER };

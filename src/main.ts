@@ -21,7 +21,6 @@ function handleMove(
   startRow: number,
   startColumn: number
 ): void {
-  next(state);
   const finalCell = state.grid[finalRow][finalColumn];
   if (finalCell !== EMPTY_VALUE || (finalRow === -1 && finalColumn === -1)) {
     updateUI(state);
@@ -57,6 +56,7 @@ function handleMove(
   const serialized = state.serialize();
   store.serialized = serialized;
   stack.add(serialized);
+  next(state);
 }
 
 function startSession({ grid, turn }: SerializedState) {
@@ -113,4 +113,3 @@ dom.registerUndo(
     store.serialized = state.serialize();
   }
 );
-next(state);
