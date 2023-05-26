@@ -13,6 +13,7 @@ import { store } from "./store/store";
 import { toast } from "./dom/toast";
 import { type Cell, type Grid, type SerializedState } from "./types";
 import { changeGridStringToNumbers } from "./utils";
+import { next } from "./ai/engine";
 
 function handleMove(
   finalRow: number,
@@ -20,6 +21,7 @@ function handleMove(
   startRow: number,
   startColumn: number
 ): void {
+  next(state);
   const finalCell = state.grid[finalRow][finalColumn];
   if (finalCell !== EMPTY_VALUE || (finalRow === -1 && finalColumn === -1)) {
     updateUI(state);
@@ -118,3 +120,4 @@ dom.registerUndo(
     store.serialized = state.serialize();
   }
 );
+next(state);

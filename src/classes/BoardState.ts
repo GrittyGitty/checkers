@@ -8,7 +8,7 @@ import {
   type SerializedState,
   type StartCell,
 } from "../types";
-import { colorForCell, forEachCell, oppositeColor } from "../utils";
+import { forEachCell, gridValToColor, oppositeColor } from "../utils";
 
 export function generateGridUpdatesForMoveIfLegal(
   boardState: BoardState,
@@ -32,8 +32,9 @@ export function generateGridUpdatesForMoveIfLegal(
         finalRow,
         finalColumn,
         pieces.indexOf(
-          `${colorForCell(boardState.grid[startRow][startColumn]) as string}-` +
-            "king"
+          `${
+            gridValToColor[boardState.grid[startRow][startColumn]] as string
+          }-` + "king"
         )
       )
     );
@@ -47,12 +48,12 @@ function allLogicalLegalMovesForCell(
   { startRow, startColumn }: StartCell
 ) {
   const startCell = grid[startRow][startColumn];
-  if (startCell === EMPTY_VALUE || colorForCell(startCell) !== turn) {
+  if (startCell === EMPTY_VALUE || gridValToColor[startCell] !== turn) {
     return [];
   }
   return isThereAnEatingPossibilityForGivenColor(
     grid,
-    colorForCell(grid[startRow][startColumn])
+    gridValToColor[grid[startRow][startColumn]]
   )
     ? allLegalEatingMovesForCell(grid, startRow, startColumn)
     : allLegalNonEatingMovesForCell(grid, startRow, startColumn);
@@ -94,7 +95,7 @@ export function allLegalEatingMovesForCell(
 
       if (finalCell === EMPTY_VALUE) {
         if (
-          colorForCell(oneBefore) === oppositeColor(colorForCell(startCell))
+          gridValToColor[oneBefore] === oppositeColor(gridValToColor[startCell])
         ) {
           possibleEatings.push({
             finalCell: { row: finalRow, column: finalColumn },
@@ -118,7 +119,7 @@ export function allLegalEatingMovesForCell(
 function allCellsForColor(grid: Grid, color?: Color) {
   const cells: Cell[] = [];
   forEachCell((row: number, column: number) => {
-    if (colorForCell(grid[row][column]) === color) {
+    if (gridValToColor[grid[row][column]] === color) {
       cells.push({ row, column });
     }
   });

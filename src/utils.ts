@@ -9,11 +9,9 @@ export function forEachCell(cb: (row: number, column: number) => void) {
   }
 }
 
-export function colorForCell(gridVal: number) {
-  return gridVal !== EMPTY_VALUE
-    ? (pieces[gridVal].split("-")[0] as Color)
-    : undefined;
-}
+export const gridValToColor = pieces.map((_, gridVal) =>
+  gridVal !== EMPTY_VALUE ? (pieces[gridVal].split("-")[0] as Color) : undefined
+);
 
 export function changeGridStringToNumbers(gridstring: string) {
   return ["b", "B", "r", "R", "-"].reduce(
