@@ -1,6 +1,6 @@
 # checkers
 
-[Play](https://netanel-haber.github.io/checkers/) vanilla TS, html and css pvp checkers started a trillion years ago, before I could tell a div from a span.
+[Play](https://netanel-haber.github.io/checkers/) vanilla TS, html and css checkers started a trillion years ago, before I could tell a div from a span.
 Now with Vite.
 
 **Features:**

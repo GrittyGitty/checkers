@@ -1,7 +1,7 @@
 {
   "name": "checkers",
   "version": "1.0.0",
-  "description": "pure js, html and css web based pvp checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
+  "description": "pure js, html and css web based checkers from a trillion years ago.  [Play](https://netanel-haber.github.io/checkers/).",
   "type": "module",
   "scripts": {
     "dev": "vite",
