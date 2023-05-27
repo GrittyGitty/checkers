@@ -2,7 +2,7 @@ import { type BoardState } from "../classes/BoardState";
 import { forEachCell, gridValToColor } from "../utils";
 
 const valueToScore = [1, 1.2, 1, 1.2, 0] as const;
-const calculateScore = ({ grid, turn }: BoardState) => {
+export const calculateScore = ({ grid, turn }: BoardState) => {
   let score = 0;
   forEachCell((r, c) => {
     const cell = grid[r][c];
