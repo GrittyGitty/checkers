@@ -136,9 +136,7 @@ td,
   padding: 20px;
   margin-top: 20px;
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
-  width: 150px;
 }
 
 .buttons button {
@@ -169,20 +167,23 @@ td,
   position: relative;
 }
 
-#ai-label {
-  display: block;
+#ai-controls {
+  display: flex;
   color: white;
   position: absolute;
-  display: block;
   left: 100%;
   bottom: 0;
   font-family: rubik;
   transform: translate(-100%, 120%);
-  width: 50px;
-  padding: 5px;
+  padding: 2px 5px;
   border-radius: 7px;
   background-color: rgb(240 54 51);
   margin: 0px auto;
+  width: 140px;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.75rem;
+  height: 40px;
 }
 
 td.move-source {
@@ -190,4 +191,23 @@ td.move-source {
 }
 td.move-destination {
   filter: drop-shadow(2px 2px 6px #382cfd);
+}
+
+#slider {
+  display: inline-flex;
+  width: 100px;
+  flex-direction: column;
+}
+
+#ai-controls:has(#ai:not(:checked)) {
+  background-color: rgba(240, 54, 51, 0.5);
+}
+
+#ai-controls:has(#ai:not(:checked)) #depth {
+  pointer-events: none;
+}
+
+#markers {
+  display: flex;
+  justify-content: space-between;
 }

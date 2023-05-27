@@ -9,6 +9,14 @@ import {
 } from "../types";
 import { forEachCell } from "../utils";
 
+export const values = {
+  ai: true,
+  depth: 7,
+  toggleAi() {
+    return (this.ai = !this.ai);
+  },
+};
+
 const $ = <E extends HTMLElement = HTMLElement>(id: string) => {
   const element = document.getElementById(id);
   if (element == null) {
@@ -25,7 +33,10 @@ const reset = $("reset");
 const share = $("share");
 const undo = $<HTMLButtonElement>("undo");
 const redo = $<HTMLButtonElement>("redo");
-const ai = $<HTMLLabelElement>("ai");
+const ai = $<HTMLInputElement>("ai");
+const depth = $<HTMLInputElement>("depth");
+ai.checked = values.ai;
+depth.value = String(values.depth);
 
 const add =
   <K extends keyof HTMLElementEventMap>(e: K) =>
@@ -36,6 +47,12 @@ const click = add("click");
 const mousedown = add("mousedown");
 const mouseover = add("mouseover");
 const touchstart = add("touchstart");
+const change = add("change");
+
+change(depth, (e) => {
+  const { valueAsNumber } = e.target as HTMLInputElement;
+  values.depth = valueAsNumber;
+});
 
 const LEGAL_TARGET = "legal-target";
 const CAN_MOVE = "can-move";
@@ -240,7 +257,9 @@ export const dom = {
   registerDrag(controllers: StateControllers) {
     createDrag(controllers);
   },
-  registerAi(onClick: VoidFunction) {
-    click(ai, onClick);
+  registerAi(onToggle: (ai: boolean) => void) {
+    click(ai, () => {
+      onToggle(values.toggleAi());
+    });
   },
 };

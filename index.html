@@ -27,10 +27,6 @@
 <body>
     <div id="containerBoard">
         <div id="board">
-            <label id="ai-label">
-                <input id="ai" checked type="checkbox" name="ai-on" />
-                AI
-            </label>
             <table id="table">
                 <tr>
                     <td></td>
@@ -113,6 +109,20 @@
                     <td></td>
                 </tr>
             </table>
+            <div id="ai-controls">
+                <label>
+                    <input id="ai" checked type="checkbox" name="ai-on" />
+                    AI
+                </label>
+                <div id="slider">
+                    <input list="markers" id="depth" type="range" step="2" min="5" max="9">
+                    <datalist id="markers">
+                        <option label="1" value="5"></option>
+                        <option label="2" value="7"></option>
+                        <option label="3" value="9"></option>
+                    </datalist>
+                </div>
+            </div>
         </div>
         <div id="containerTurn"> current turn
             <div id="turnDiv"></div>

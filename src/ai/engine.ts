@@ -9,14 +9,14 @@ const defaultBest = {
   move: { finalColumn: 0, finalRow: 0, startColumn: 0, startRow: 0 },
 };
 
-async function bestMove(state: BoardState) {
+async function bestMove(state: BoardState, depth: number) {
   const candidates = await Promise.all(
     state
       .getAllLegalMovesForColor()
       .flatMap(([{ row, column }, potentialMoves]) =>
         potentialMoves.map(
           ({ updates, finalCell: { row: finalRow, column: finalColumn } }) =>
-            enqueue(state.updatedGrid(updates).updateCurrentTurn()).then(
+            enqueue(state.updatedGrid(updates).updateCurrentTurn(), depth).then(
               (score) => ({
                 move: {
                   startRow: row,
@@ -38,12 +38,13 @@ async function bestMove(state: BoardState) {
 
 export const doAiMove = (
   state: BoardState,
-  handleMove: StateControllers["handleMove"]
+  handleMove: StateControllers["handleMove"],
+  depth: number
 ) => {
   if (state.turn !== COMPUTER) return;
   setTimeout(() => {
     const t0 = performance.now();
-    bestMove(state)
+    bestMove(state, depth)
       .then(({ finalRow, finalColumn, startRow, startColumn }) => {
         const elapsed = performance.now() - t0;
         console.log(`Time elapsed: ${elapsed}ms`);

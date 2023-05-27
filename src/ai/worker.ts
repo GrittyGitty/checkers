@@ -1,12 +1,12 @@
 import { BoardState } from "../classes/BoardState";
 
 import { bestScore } from "./bestScore";
-import { type FinishedWork } from "./workers";
+import { type InitWork, type FinishedWork } from "./workers";
 
-self.addEventListener("message", (e) => {
-  const state = BoardState.deserialize(e.data);
+self.addEventListener("message", ({ data }: { data: InitWork }) => {
+  const state = BoardState.deserialize(data.state);
   const stringGrid = String(state.grid);
-  const score = bestScore(state);
+  const score = bestScore(state, data.depth);
   const final: FinishedWork = {
     score,
     stringGrid,

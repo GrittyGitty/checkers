@@ -17,12 +17,18 @@ export type FinishedWork = {
   stringGrid: string;
 };
 
-export const enqueue = (state: BoardState): Promise<number> =>
+export type InitWork = {
+  depth: number;
+  state: BoardState;
+};
+
+export const enqueue = (state: BoardState, depth: number): Promise<number> =>
   new Promise((resolve) => {
     const worker = getWorker();
     const initialStringGrid = String(state.grid);
     worker.addEventListener("message", onMessage);
-    worker.postMessage(state);
+    const initWork: InitWork = { state, depth };
+    worker.postMessage(initWork);
 
     function onMessage({
       data: { score, stringGrid },

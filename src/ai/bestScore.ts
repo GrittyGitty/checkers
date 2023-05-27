@@ -1,7 +1,7 @@
 import { type BoardState } from "../classes/BoardState";
 import { forEachCell, gridValToColor } from "../utils";
 
-const valueToScore = [1, 1.2, 1, 1.2, 0] as const;
+const valueToScore = [1, 1, 1, 1, 0] as const;
 export const calculateScore = ({ grid, turn }: BoardState) => {
   let score = 0;
   forEachCell((r, c) => {
@@ -14,10 +14,7 @@ export const calculateScore = ({ grid, turn }: BoardState) => {
   return score;
 };
 
-const ODD_DEPTH = 5;
-if (ODD_DEPTH % 2 === 0) throw new Error("Depth must be odd");
-
-export function bestScore(state: BoardState, depth = ODD_DEPTH) {
+export function bestScore(state: BoardState, depth: number) {
   let max = 0;
   const work = [{ state, depth }];
   let item: (typeof work)[number] | undefined;

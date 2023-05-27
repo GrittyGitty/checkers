@@ -18,6 +18,6 @@ describe("bestScore", () => {
     turn: Color.red,
   });
   bench("normal", () => {
-    bestScore(state);
+    bestScore(state, 7);
   });
 });

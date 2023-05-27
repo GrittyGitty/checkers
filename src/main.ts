@@ -5,7 +5,7 @@ import {
   generateGridUpdatesForMoveIfLegal,
 } from "./classes/BoardState";
 import { EMPTY_VALUE, pieces } from "./consts";
-import { dom } from "./dom/dom";
+import { dom, values } from "./dom/dom";
 import { GridUpdate } from "./classes/GridUpdate";
 import { stack } from "./stack";
 
@@ -14,8 +14,6 @@ import { toast } from "./dom/toast";
 import { type Cell, type SerializedState } from "./types";
 import { doAiMove } from "./ai/engine";
 import { computeGridFromString, defaultSetup } from "./utils";
-
-let ai = true;
 
 function handleMove(
   finalRow: number,
@@ -54,8 +52,8 @@ function handleMove(
   const serialized = state.serialize();
   store.serialized = serialized;
   stack.add(serialized);
-  if (!ai) return;
-  doAiMove(state, handleMove);
+  if (!values.ai) return;
+  doAiMove(state, handleMove, values.depth);
 }
 
 function startSession({ grid, turn }: SerializedState) {
@@ -107,7 +105,6 @@ dom.registerUndo(
     store.serialized = state.serialize();
   }
 );
-dom.registerAi(() => {
-  ai = !ai;
-  if (ai) doAiMove(state, handleMove);
+dom.registerAi((ai) => {
+  if (ai) doAiMove(state, handleMove, values.depth);
 });
