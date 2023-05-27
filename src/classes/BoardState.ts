@@ -261,4 +261,15 @@ export class BoardState {
       turn: this.turn,
     };
   }
+
+  /**
+   * From serialized state, in worker
+   */
+  static deserialize(serialized: {
+    [K in keyof BoardState]: BoardState[K];
+  }): BoardState {
+    return new BoardState(serialized.grid, serialized.turn, {
+      flaggedCell: serialized.flaggedCell,
+    });
+  }
 }
