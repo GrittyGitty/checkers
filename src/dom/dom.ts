@@ -11,7 +11,7 @@ import { forEachCell } from "../utils";
 
 export const values = {
   ai: true,
-  depth: 7,
+  depth: 5,
   toggleAi() {
     return (this.ai = !this.ai);
   },
