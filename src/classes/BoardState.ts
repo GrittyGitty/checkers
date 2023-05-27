@@ -189,7 +189,6 @@ export class BoardState {
   grid: Grid;
   turn: Color;
   flaggedCell?: Cell;
-  piecesThatCanMove: Cell[];
   lastMove?: Move;
 
   constructor({
@@ -207,7 +206,6 @@ export class BoardState {
     this.turn = turn;
     this.flaggedCell = flaggedCell;
     this.lastMove = lastMove;
-    this.piecesThatCanMove = this.getPiecesThatCanMove();
   }
 
   updatedGrid(updates: GridUpdate[]) {
@@ -246,7 +244,7 @@ export class BoardState {
     );
   }
 
-  getPiecesThatCanMove() {
+  get piecesThatCanMove() {
     return (
       this.flaggedCell != null
         ? [this.flaggedCell]
