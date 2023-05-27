@@ -46,7 +46,7 @@ export const doAiMove = (
     bestMove(state)
       .then(({ finalRow, finalColumn, startRow, startColumn }) => {
         const elapsed = performance.now() - t0;
-        const maxiumum400 = Math.max(250 - elapsed, 0);
+        const maxiumum400 = Math.max(200 - elapsed, 0);
         setTimeout(() => {
           handleMove(finalRow, finalColumn, startRow, startColumn);
         }, maxiumum400);
