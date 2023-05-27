@@ -41,3 +41,5 @@ export type StateControllers = {
   handleMove: (a: number, b: number, c: number, d: number) => void;
   updateUI: (startRow: number, startColumn: number) => void;
 };
+
+export type Move = StartCell & FinalCell;

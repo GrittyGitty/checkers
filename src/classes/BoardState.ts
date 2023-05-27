@@ -1,6 +1,7 @@
 import { eatingDys, EMPTY_VALUE, movingDys, pieces } from "../consts";
 import { GridUpdate, type PotentialMoves } from "./GridUpdate";
 import {
+  type Move,
   type Cell,
   type Color,
   type FinalCell,
@@ -189,30 +190,47 @@ export class BoardState {
   turn: Color;
   flaggedCell?: Cell;
   piecesThatCanMove: Cell[];
+  lastMove?: Move;
 
-  constructor(
-    grid: Grid,
-    turnColor: Color,
-    { flaggedCell }: { flaggedCell?: Cell } = {}
-  ) {
+  constructor({
+    grid,
+    turn,
+    flaggedCell,
+    lastMove,
+  }: {
+    flaggedCell?: Cell;
+    lastMove?: Move;
+    grid: Grid;
+    turn: Color;
+  }) {
     this.grid = grid;
-    this.turn = turnColor;
+    this.turn = turn;
     this.flaggedCell = flaggedCell;
+    this.lastMove = lastMove;
     this.piecesThatCanMove = this.getPiecesThatCanMove();
   }
 
   updatedGrid(updates: GridUpdate[]) {
-    const newGrid = BoardState.computeGrid(this.grid, updates);
-    return new BoardState(newGrid, this.turn);
+    return new BoardState({
+      ...this,
+      grid: BoardState.computeGrid(this.grid, updates),
+    });
   }
 
   updateFlaggedCell(flaggedCell?: Cell) {
-    return new BoardState(this.grid, this.turn, { flaggedCell });
+    return new BoardState({ ...this, flaggedCell });
+  }
+
+  updateLastMove(lastMove: Move) {
+    return new BoardState({ ...this, lastMove });
   }
 
   updateCurrentTurn() {
-    const grid = this.grid;
-    return new BoardState(grid, oppositeColor(this.turn));
+    return new BoardState({
+      ...this,
+      grid: this.grid,
+      turn: oppositeColor(this.turn),
+    });
   }
 
   getAllLegalMovesForColor() {
@@ -268,8 +286,6 @@ export class BoardState {
   static deserialize(serialized: {
     [K in keyof BoardState]: BoardState[K];
   }): BoardState {
-    return new BoardState(serialized.grid, serialized.turn, {
-      flaggedCell: serialized.flaggedCell,
-    });
+    return new BoardState(serialized);
   }
 }

@@ -1,9 +1,8 @@
+import { type BoardState } from "../classes/BoardState";
 import { pieces, EMPTY_VALUE, colors } from "../consts";
 import { stack } from "../stack";
 import {
   type Cell,
-  type Grid,
-  type Color,
   type EventMapSubset,
   type EventCoords,
   type StateControllers,
@@ -40,6 +39,8 @@ const touchstart = add("touchstart");
 
 const LEGAL_TARGET = "legal-target";
 const CAN_MOVE = "can-move";
+export const MOVE_SOURCE = "move-source";
+export const MOVE_DESTINATION = "move-destination";
 const pieceClasses = pieces.map((_, i) => `piece-${pieces[i]}`);
 const EMPTY_PIECE = pieceClasses[EMPTY_VALUE];
 const colorToClass = Object.fromEntries(colors.map((c) => [c, `piece-${c}`]));
@@ -62,10 +63,8 @@ const forEachDomCell = (
 };
 
 const renderClasses = (
-  grid: Grid,
-  turn: Color,
-  legalTargets: Cell[],
-  piecesThatCanMove: Cell[]
+  { grid, turn, lastMove, piecesThatCanMove }: BoardState,
+  legalTargets: Cell[]
 ) => {
   turnDiv.className = colorToClass[turn];
   undo.disabled = stack.isEmpty;
@@ -76,6 +75,13 @@ const renderClasses = (
     const cellVal = grid[row][column];
     const piece = pieceClasses[cellVal];
     let newValue = `${piece} `;
+    if (lastMove) {
+      const { startRow, startColumn, finalRow, finalColumn } = lastMove;
+      if (startRow === row && startColumn === column)
+        newValue += `${MOVE_SOURCE} `;
+      else if (finalRow === row && finalColumn === column)
+        newValue += `${MOVE_DESTINATION} `;
+    }
     if (isLegalTargetForHoveredCell(row, column)) {
       newValue += `${LEGAL_TARGET} `;
     }
@@ -202,17 +208,13 @@ function getIndicesForMouseCoordinates({ clientX, clientY }: EventCoords) {
 
 export const dom = {
   updateDOM({
-    grid,
-    turn,
+    state,
     legalTargets,
-    piecesThatCanMove,
   }: {
-    grid: Grid;
-    turn: Color;
+    state: BoardState;
     legalTargets: Cell[];
-    piecesThatCanMove: Cell[];
   }) {
-    renderClasses(grid, turn, legalTargets, piecesThatCanMove);
+    renderClasses(state, legalTargets);
   },
   registerShare: (cb: (e: MouseEvent) => void) => {
     click(share, cb);

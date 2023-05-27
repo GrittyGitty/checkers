@@ -184,3 +184,10 @@ td,
   background-color: rgb(240 54 51);
   margin: 0px auto;
 }
+
+td.move-source {
+  filter: drop-shadow(2px 2px 6px #382c85);
+}
+td.move-destination {
+  filter: drop-shadow(2px 2px 6px #382cfd);
+}

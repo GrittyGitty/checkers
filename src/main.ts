@@ -29,15 +29,11 @@ function handleMove(
     return;
   }
 
-  const updates = generateGridUpdatesForMoveIfLegal(state, {
-    finalRow,
-    finalColumn,
-    startRow,
-    startColumn,
-  });
+  const move = { finalRow, finalColumn, startRow, startColumn };
+  const updates = generateGridUpdatesForMoveIfLegal(state, move);
   if (updates.length > 0) {
     // was legal move...
-    const updatedState = state.updatedGrid(updates);
+    const updatedState = state.updatedGrid(updates).updateLastMove(move);
     const isTheMoveAnEatMove =
       (updates.length === 3 &&
         pieces[updates[updates.length - 1].value].split("-")[1] !== "king") ||
@@ -64,7 +60,7 @@ function handleMove(
 
 function startSession({ grid, turn }: SerializedState) {
   const matrix = computeGridFromString(grid);
-  return updateUI(new BoardState(matrix, turn));
+  return updateUI(new BoardState({ grid: matrix, turn }));
 }
 
 let state = startSession(store.serialized);
@@ -75,12 +71,7 @@ function resetGame() {
 }
 
 function updateUI(state: BoardState, legalTargets: Cell[] = []) {
-  dom.updateDOM({
-    grid: state.grid,
-    turn: state.turn,
-    legalTargets,
-    piecesThatCanMove: state.piecesThatCanMove,
-  });
+  dom.updateDOM({ state, legalTargets });
   return state;
 }
 
