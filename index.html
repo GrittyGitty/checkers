@@ -155,7 +155,6 @@ td,
 
 .buttons {
   padding: 20px;
-  margin-top: 20px;
   display: flex;
   gap: 6px;
 }
@@ -200,11 +199,11 @@ td,
   border-radius: 7px;
   background-color: rgb(240 54 51);
   margin: 0px auto;
-  width: 140px;
+  width: 150px;
   gap: 10px;
   align-items: center;
   font-size: 0.75rem;
-  height: 40px;
+  height: 25px;
 }
 
 td.move-source {
@@ -232,9 +231,10 @@ td.move-destination {
 #markers {
   display: flex;
   justify-content: space-between;
+  height: 0;
 }
     </style>
-  <script type="module" crossorigin src="./assets/index-d8168641.js"></script>
+  <script type="module" crossorigin src="./assets/index-ac8767e4.js"></script>
 </head>
 
 <body>
@@ -330,9 +330,9 @@ td.move-destination {
                 <div id="slider">
                     <input list="markers" id="depth" type="range" step="2" min="5" max="9">
                     <datalist id="markers">
-                        <option label="1" value="5"></option>
-                        <option label="2" value="7"></option>
-                        <option label="3" value="9"></option>
+                        <option value="5"></option>
+                        <option value="7"></option>
+                        <option value="9"></option>
                     </datalist>
                 </div>
             </div>
