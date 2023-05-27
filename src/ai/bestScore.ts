@@ -18,19 +18,25 @@ const ODD_DEPTH = 5;
 if (ODD_DEPTH % 2 === 0) throw new Error("Depth must be odd");
 
 export function bestScore(state: BoardState, depth = ODD_DEPTH) {
-  if (!depth) return calculateScore(state);
-
   let max = 0;
-  for (const [, potentialMoves] of state.getAllLegalMovesForColor()) {
-    for (const { updates } of potentialMoves) {
-      const score = bestScore(
-        state.updatedGrid(updates).updateCurrentTurn(),
-        depth - 1
-      );
-      if (score >= max) {
-        max = score;
+  const work = [{ state, depth }];
+  let item: (typeof work)[number] | undefined;
+  while ((item = work.pop())) {
+    const { state, depth } = item;
+    if (!depth) {
+      const score = calculateScore(state);
+      if (score >= max) max = score;
+      continue;
+    }
+    for (const [, potentialMoves] of state.getAllLegalMovesForColor()) {
+      for (const { updates } of potentialMoves) {
+        work.push({
+          state: state.updatedGrid(updates).updateCurrentTurn(),
+          depth: depth - 1,
+        });
       }
     }
   }
+
   return max;
 }
