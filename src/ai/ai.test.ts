@@ -5,10 +5,10 @@ import { computeGridFromString, defaultSetup } from "../utils";
 import { BoardState } from "../classes/BoardState";
 import { calculateScore } from "./bestScore";
 
-const base = new BoardState(
-  computeGridFromString(defaultSetup.grid),
-  Color.black
-);
+const base = new BoardState({
+  grid: computeGridFromString(defaultSetup.grid),
+  turn: Color.black,
+});
 
 it("calculates score correctly", () => {
   let result = calculateScore(base);
