@@ -1,6 +1,6 @@
 import { type BoardState } from "../classes/BoardState";
 import { COMPUTER } from "../consts";
-import { type StateControllers } from "../types";
+import { type Move, type StateControllers } from "../types";
 
 import { enqueue } from "./workers";
 
@@ -9,26 +9,34 @@ const defaultBest = {
   move: { finalColumn: 0, finalRow: 0, startColumn: 0, startRow: 0 },
 };
 
-async function bestMove(state: BoardState, depth: number) {
+async function bestMove(state: BoardState, depth: number): Promise<Move> {
+  const moves = state.getAllLegalMovesForColor();
+  if (moves.length === 1 && moves[0][1].length === 1) {
+    const [{ row, column }, [{ finalCell }]] = moves[0];
+    return {
+      startRow: row,
+      startColumn: column,
+      finalRow: finalCell.row,
+      finalColumn: finalCell.column,
+    };
+  }
   const candidates = await Promise.all(
-    state
-      .getAllLegalMovesForColor()
-      .flatMap(([{ row, column }, potentialMoves]) =>
-        potentialMoves.map(
-          ({ updates, finalCell: { row: finalRow, column: finalColumn } }) =>
-            enqueue(state.updatedGrid(updates).updateCurrentTurn(), depth).then(
-              (score) => ({
-                move: {
-                  startRow: row,
-                  startColumn: column,
-                  finalRow,
-                  finalColumn,
-                },
-                score,
-              })
-            )
-        )
+    moves.flatMap(([{ row, column }, potentialMoves]) =>
+      potentialMoves.map(
+        ({ updates, finalCell: { row: finalRow, column: finalColumn } }) =>
+          enqueue(state.updatedGrid(updates).updateCurrentTurn(), depth).then(
+            (score) => ({
+              move: {
+                startRow: row,
+                startColumn: column,
+                finalRow,
+                finalColumn,
+              },
+              score,
+            })
+          )
       )
+    )
   );
   return candidates.reduce(
     (acc, cur) => (cur.score >= acc.score ? cur : acc),

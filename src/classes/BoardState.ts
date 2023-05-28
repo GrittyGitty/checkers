@@ -232,24 +232,30 @@ export class BoardState {
   }
 
   getAllLegalMovesForColor() {
-    return allCellsForColor(this.grid, this.turn).map(
-      (cell) =>
-        [
-          cell,
-          allLogicalLegalMovesForCell(this, {
-            startRow: cell.row,
-            startColumn: cell.column,
-          }),
-        ] as const
-    );
+    return this.effectivePieces
+      .map(
+        (cell) =>
+          [
+            cell,
+            allLogicalLegalMovesForCell(this, {
+              startRow: cell.row,
+              startColumn: cell.column,
+            }),
+          ] as const
+      )
+      .filter(([, moves]) => moves.length);
   }
 
   get piecesThatCanMove() {
-    return (
-      this.flaggedCell != null
-        ? [this.flaggedCell]
-        : allCellsForColor(this.grid, this.turn)
-    ).filter(({ row, column }) => this.getLegalTargets(row, column).length);
+    return this.effectivePieces.filter(
+      ({ row, column }) => this.getLegalTargets(row, column).length
+    );
+  }
+
+  private get effectivePieces() {
+    return this.flaggedCell != null
+      ? [this.flaggedCell]
+      : allCellsForColor(this.grid, this.turn);
   }
 
   getLegalTargets(startRow: number, startColumn: number) {
