@@ -52,3 +52,9 @@ export const computeGridFromString = (grid: string): Grid => {
     row.map((_, cIndex) => Number(regularBoardSetup[rIndex].charAt(cIndex)))
   );
 };
+
+export const assert = (condition: boolean, msg?: string): asserts condition => {
+  if (!condition) {
+    throw new Error(msg);
+  }
+};

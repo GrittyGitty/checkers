@@ -19,25 +19,29 @@ const valueToScore = [R, KING, R, KING, 0] as const;
 
 /* eslint-disable prettier/prettier */
 const bonuses = [
-  [0,   B,  0,   B,  0,   B,  0,   B],
-  [S,   0,  0,   0,  0,   0,  0,   0],
-  [0,   0,  0,   0,  0,   0,  0,   S],
-  [S,   0,  C,   0,  C,   0,  0,   0],
-  [0,   0,  0,   C,  0,   C,  0,   S],
-  [S,   0,  0,   0,  0,   0,  0,   0],
-  [0,   0,  0,   0,  0,   0,  0,   S],
-  [B,   0,  B,   0,  B,   0,  B,   0],
+  [0,  B,  0,  B,  0,  B,  0,  B],
+  [S,  0,  0,  0,  0,  0,  0,  0],
+  [0,  0,  0,  0,  0,  0,  0,  S],
+  [S,  0,  C,  0,  C,  0,  0,  0],
+  [0,  0,  0,  C,  0,  C,  0,  S],
+  [S,  0,  0,  0,  0,  0,  0,  0],
+  [0,  0,  0,  0,  0,  0,  0,  S],
+  [B,  0,  B,  0,  B,  0,  B,  0],
 ] as const;
+
 
 /* eslint-enable prettier/prettier */
 
 const calculateBonus = (
   r: number,
   c: number,
-  color: Color | undefined,
+  color: Color,
   turn: Color
 ): number => {
   const potentialBonus = bonuses[r][c];
+  /** Laziest way to do this. TODO: assert so this doesn't happen. */
+  if (potentialBonus === S)
+    return turn === color ? potentialBonus : -potentialBonus;
   if (r <= 3 && color === Color.red)
     return turn === Color.red ? potentialBonus : -potentialBonus;
   if (r >= 4 && color === Color.black)

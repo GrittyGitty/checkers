@@ -59,15 +59,7 @@ r-------`),
 
 it("calculates score correctly", () => {
   const result = calculateScore(state2);
-  const regular = 12 * R;
-  const backRow = 3 * B;
-  const side = 2 * S;
-
-  const black = 3 * R;
-  const blackKing = 1 * KING;
-  const blackSide = 2 * S;
-  const blackCenter = 1 * C;
-  expect(result).toBe(
-    regular + backRow + side - black - blackKing - blackSide - blackCenter
-  );
+  const redScore = 12 * R + 0 * KING + 2 * S + 3 * B + 0 * C;
+  const blackScore = 3 * R + 1 * KING + 2 * S + 0 * B + 1 * C;
+  expect(result).toBe(redScore - blackScore);
 });
