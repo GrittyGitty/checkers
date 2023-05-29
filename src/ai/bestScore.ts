@@ -1,7 +1,50 @@
 import { type BoardState } from "../classes/BoardState";
+import { Color } from "../types";
 import { forEachCell, gridValToColor } from "../utils";
 
-const valueToScore = [1, 1, 1, 1, 0] as const;
+/** side bonus */
+export const S = 1.5;
+/** center bonus */
+export const C = 2;
+/** back row bonus - a little less than king bonus,
+ * saw somewhere that offensive strategies are more successful shrug */
+export const B = 4;
+/** king bonus */
+const K = 5;
+/** regular */
+export const R = 10;
+
+export const KING = K + R;
+const valueToScore = [R, KING, R, KING, 0] as const;
+
+/* eslint-disable prettier/prettier */
+const bonuses = [
+  [0,   B,  0,   B,  0,   B,  0,   B],
+  [S,   0,  0,   0,  0,   0,  0,   0],
+  [0,   0,  0,   0,  0,   0,  0,   S],
+  [S,   0,  C,   0,  C,   0,  0,   0],
+  [0,   0,  0,   C,  0,   C,  0,   S],
+  [S,   0,  0,   0,  0,   0,  0,   0],
+  [0,   0,  0,   0,  0,   0,  0,   S],
+  [B,   0,  B,   0,  B,   0,  B,   0],
+] as const;
+
+/* eslint-enable prettier/prettier */
+
+const calculateBonus = (
+  r: number,
+  c: number,
+  color: Color | undefined,
+  turn: Color
+): number => {
+  const potentialBonus = bonuses[r][c];
+  if (r <= 3 && color === Color.red)
+    return turn === Color.red ? potentialBonus : -potentialBonus;
+  if (r >= 4 && color === Color.black)
+    return turn === Color.black ? potentialBonus : -potentialBonus;
+  return 0;
+};
+
 export const calculateScore = ({ grid, turn }: BoardState) => {
   let score = 0;
   forEachCell((r, c) => {
@@ -9,7 +52,8 @@ export const calculateScore = ({ grid, turn }: BoardState) => {
     const color = gridValToColor[cell];
     if (!color) return;
     const value = valueToScore[cell];
-    score += color === turn ? value : -value;
+    const bonus = calculateBonus(r, c, color, turn);
+    score += (color === turn ? value : -value) + bonus;
   });
   return score;
 };

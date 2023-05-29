@@ -3,7 +3,7 @@ import { type BoardState } from "../classes/BoardState";
 import Worker from "./worker?worker";
 
 const WORKERS = window.navigator.hardwareConcurrency + 2;
-const pool = Array.from({ length: WORKERS }).map(() => new Worker());
+const pool = Array.from({ length: WORKERS }, () => new Worker());
 
 let i = 0;
 const getWorker = () => {
