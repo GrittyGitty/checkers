@@ -32,14 +32,12 @@ html {
 body {
   height: 100%;
   margin: auto;
-  background-image: linear-gradient(rgba(73, 85, 80, 0.92), #33234d);
+  background-image: linear-gradient(rgba(80, 73, 85, 0.92), rgb(95, 32, 129));
 }
 
 #turnDiv {
   margin: auto;
   margin-top: 10px;
-  border-radius: 50%;
-  background-color: rgb(60, 180, 217);
 }
 
 #containerTurn {
@@ -60,10 +58,11 @@ body {
 }
 
 table {
-  background-color: rgb(240, 248, 255);
   border-collapse: collapse;
-  box-shadow: 10px 10px 30px grey;
+  filter: drop-shadow(0 0 0.25rem grey);
   touch-action: none;
+  overflow: hidden;
+  border-radius: 5px;
 }
 
 [class^="piece"] {
@@ -87,22 +86,24 @@ table {
 
 tr:nth-child(odd) td:nth-child(even),
 tr:nth-child(even) td:nth-child(odd) {
-  background-color: rgb(60, 180, 217);
+  background-color: rgba(207, 174, 40, 0.7);
 }
 
 @keyframes flickerAnimation {
   0% {
-    opacity: 0.4;
+    opacity: 0.8;
   }
-
+  50% {
+    opacity: 0.1;
+  }
   100% {
-    opacity: 0.5;
+    opacity: 0.8;
   }
 }
 
 .legal-target {
-  opacity: 0.4;
-  animation: flickerAnimation 0.75s infinite;
+  opacity: 0.8;
+  animation: flickerAnimation 4s infinite;
 }
 
 .can-move {
