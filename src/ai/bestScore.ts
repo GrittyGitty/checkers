@@ -1,6 +1,6 @@
 import { type BoardState } from "../classes/BoardState";
 import { Color } from "../types";
-import { forEachCell, gridValToColor } from "../utils";
+import { assert, forEachCell, gridValToColor } from "../utils";
 
 /** side bonus */
 export const S = 1.5;
@@ -17,26 +17,22 @@ export const R = 10;
 export const KING = K + R;
 const valueToScore = [R, KING, R, KING, 0] as const;
 
-/* eslint-disable prettier/prettier */
 const bonuses = [
-  [0,  B,  0,  B,  0,  B,  0,  B],
-  [S,  0,  0,  0,  0,  0,  0,  0],
-  [0,  0,  0,  0,  0,  0,  0,  S],
-  [S,  0,  C,  0,  C,  0,  0,  0],
-  [0,  0,  0,  C,  0,  C,  0,  S],
-  [S,  0,  0,  0,  0,  0,  0,  0],
-  [0,  0,  0,  0,  0,  0,  0,  S],
-  [B,  0,  B,  0,  B,  0,  B,  0],
+  [0, B, 0, B, 0, B, 0, B],
+  [S, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, S],
+  [S, 0, C, 0, C, 0, 0, 0],
+  [0, 0, 0, C, 0, C, 0, S],
+  [S, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, S],
+  [B, 0, B, 0, B, 0, B, 0],
 ] as const;
-
-
-/* eslint-enable prettier/prettier */
 
 const calculateBonus = (
   r: number,
   c: number,
   color: Color,
-  turn: Color
+  turn: Color,
 ): number => {
   const potentialBonus = bonuses[r][c];
   /** Laziest way to do this. TODO: assert so this doesn't happen. */
@@ -66,7 +62,9 @@ export function bestScore(state: BoardState, depth: number) {
   let max = 0;
   const work = [{ state, depth }];
   let item: (typeof work)[number] | undefined;
-  while ((item = work.pop())) {
+  while (work.length > 0) {
+    item = work.pop();
+    assert(item);
     const { state, depth } = item;
     if (!depth) {
       const score = calculateScore(state);

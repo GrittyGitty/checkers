@@ -1,7 +1,7 @@
 import { BoardState } from "../classes/BoardState";
 
 import { bestScore } from "./bestScore";
-import { type InitWork, type FinishedWork } from "./workers";
+import { type FinishedWork, type InitWork } from "./workers";
 
 self.addEventListener("message", ({ data }: { data: InitWork }) => {
   const state = BoardState.deserialize(data.state);

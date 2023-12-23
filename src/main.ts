@@ -1,25 +1,25 @@
 import {
-  allLegalEatingMovesForCell,
   BoardState,
+  allLegalEatingMovesForCell,
   didColorLose,
   generateGridUpdatesForMoveIfLegal,
 } from "./classes/BoardState";
+import { GridUpdate } from "./classes/GridUpdate";
 import { EMPTY_VALUE, pieces } from "./consts";
 import { dom, values } from "./dom/dom";
-import { GridUpdate } from "./classes/GridUpdate";
 import { stack } from "./stack";
 
-import { store } from "./store/store";
-import { toast } from "./dom/toast";
-import { type Cell, type SerializedState } from "./types";
 import { doAiMove } from "./ai/engine";
+import { toast } from "./dom/toast";
+import { store } from "./store/store";
+import { type Cell, type SerializedState } from "./types";
 import { computeGridFromString, defaultSetup } from "./utils";
 
 function handleMove(
   finalRow: number,
   finalColumn: number,
   startRow: number,
-  startColumn: number
+  startColumn: number,
 ): void {
   const finalCell = state.grid[finalRow][finalColumn];
   if (finalCell !== EMPTY_VALUE || (finalRow === -1 && finalColumn === -1)) {
@@ -79,7 +79,7 @@ dom.registerDrag({
   updateUI: (startRow: number, startColumn: number) => {
     updateUI(
       state.updatedGrid([new GridUpdate(startRow, startColumn, EMPTY_VALUE)]),
-      state.getLegalTargets(startRow, startColumn)
+      state.getLegalTargets(startRow, startColumn),
     );
   },
 });
@@ -93,7 +93,7 @@ dom.registerShare(() => {
 });
 dom.registerReset(resetGame);
 dom.registerHover((row: number, column: number) =>
-  updateUI(state, state.getLegalTargets(row, column))
+  updateUI(state, state.getLegalTargets(row, column)),
 );
 dom.registerUndo(
   () => {
@@ -103,7 +103,7 @@ dom.registerUndo(
   () => {
     state = startSession(stack.inc());
     store.serialized = state.serialize();
-  }
+  },
 );
 dom.registerAi((ai) => {
   if (ai) doAiMove(state, handleMove, values.depth);

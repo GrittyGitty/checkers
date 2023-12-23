@@ -1,10 +1,10 @@
 import { type BoardState } from "../classes/BoardState";
-import { pieces, EMPTY_VALUE, colors } from "../consts";
+import { EMPTY_VALUE, colors, pieces } from "../consts";
 import { stack } from "../stack";
 import {
   type Cell,
-  type EventMapSubset,
   type EventCoords,
+  type EventMapSubset,
   type StateControllers,
 } from "../types";
 import { forEachCell } from "../utils";
@@ -13,7 +13,8 @@ export const values = {
   ai: true,
   depth: 5,
   toggleAi() {
-    return (this.ai = !this.ai);
+    this.ai = !this.ai;
+    return this.ai;
   },
 };
 
@@ -72,7 +73,7 @@ const createCellInListChecker = (list: Cell[]) => {
 let dragging = false;
 
 const forEachDomCell = (
-  doThis: (row: number, column: number, domCell: HTMLTableCellElement) => void
+  doThis: (row: number, column: number, domCell: HTMLTableCellElement) => void,
 ) => {
   forEachCell((row: number, column: number) => {
     doThis(row, column, getDomCell(row, column));
@@ -81,7 +82,7 @@ const forEachDomCell = (
 
 const renderClasses = (
   { grid, turn, lastMove, piecesThatCanMove }: BoardState,
-  legalTargets: Cell[]
+  legalTargets: Cell[],
 ) => {
   turnDiv.className = colorToClass[turn];
   undo.disabled = stack.isEmpty;
@@ -137,14 +138,17 @@ const createDrag = (stateControllers: StateControllers) => {
       moveEvent: EventKey;
       endEvent: EventKey;
       coordsExtractor: (ev: typeof e) => EventCoords;
-    }
+    },
   ) {
     const { clientX, clientY } = coordsExtractor(e);
     const { row: startRow, column: startColumn } =
-      getIndicesForMouseCoordinates({ clientX, clientY });
+      getIndicesForMouseCoordinates({
+        clientX,
+        clientY,
+      });
 
     const classSet = new Set(
-      Array.from(getDomCell(startRow, startColumn).classList)
+      Array.from(getDomCell(startRow, startColumn).classList),
     );
     const cellHas = classSet.has.bind(classSet);
     if (!cellHas(CAN_MOVE) || cellHas(EMPTY_PIECE)) {
@@ -201,8 +205,13 @@ const createDrag = (stateControllers: StateControllers) => {
 };
 
 let { left, top, width, height } = table.getBoundingClientRect();
-window.onresize = () =>
-  ({ left, top, width, height } = table.getBoundingClientRect());
+window.onresize = () => {
+  const rect = table.getBoundingClientRect();
+  left = rect.left;
+  top = rect.top;
+  width = rect.width;
+  height = rect.height;
+};
 
 function pointRelativeToTable({ clientX, clientY }: EventCoords) {
   const subtractFromX = left + window.pageXOffset;

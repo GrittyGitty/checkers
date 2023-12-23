@@ -33,21 +33,21 @@ async function bestMove(state: BoardState, depth: number): Promise<Move> {
                 finalColumn,
               },
               score,
-            })
-          )
-      )
-    )
+            }),
+          ),
+      ),
+    ),
   );
   return candidates.reduce(
     (acc, cur) => (cur.score >= acc.score ? cur : acc),
-    defaultBest
+    defaultBest,
   ).move;
 }
 
 export const doAiMove = (
   state: BoardState,
   handleMove: StateControllers["handleMove"],
-  depth: number
+  depth: number,
 ) => {
   if (state.turn !== COMPUTER) return;
   setTimeout(() => {

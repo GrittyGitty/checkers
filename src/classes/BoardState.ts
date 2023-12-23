@@ -1,19 +1,19 @@
-import { eatingDys, EMPTY_VALUE, movingDys, pieces } from "../consts";
-import { GridUpdate, type PotentialMoves } from "./GridUpdate";
+import { EMPTY_VALUE, eatingDys, movingDys, pieces } from "../consts";
 import {
-  type Move,
   type Cell,
   type Color,
   type FinalCell,
   type Grid,
+  type Move,
   type SerializedState,
   type StartCell,
 } from "../types";
 import { forEachCell, gridValToColor, oppositeColor } from "../utils";
+import { GridUpdate, type PotentialMoves } from "./GridUpdate";
 
 export function generateGridUpdatesForMoveIfLegal(
   boardState: BoardState,
-  { finalRow, finalColumn, startRow, startColumn }: FinalCell & StartCell
+  { finalRow, finalColumn, startRow, startColumn }: FinalCell & StartCell,
 ) {
   const logicalMoves = allLogicalLegalMovesForCell(boardState, {
     startRow,
@@ -21,7 +21,7 @@ export function generateGridUpdatesForMoveIfLegal(
   });
   const specificMove = logicalMoves.find(
     ({ finalCell }) =>
-      finalCell.row === finalRow && finalCell.column === finalColumn
+      finalCell.row === finalRow && finalCell.column === finalColumn,
   );
   if (specificMove == null) return [];
 
@@ -33,11 +33,9 @@ export function generateGridUpdatesForMoveIfLegal(
         finalRow,
         finalColumn,
         pieces.indexOf(
-          `${
-            gridValToColor[boardState.grid[startRow][startColumn]] as string
-          }-` + "king"
-        )
-      )
+          `${gridValToColor[boardState.grid[startRow][startColumn]]}-king`,
+        ),
+      ),
     );
   }
 
@@ -46,7 +44,7 @@ export function generateGridUpdatesForMoveIfLegal(
 
 function allLogicalLegalMovesForCell(
   { grid, turn }: BoardState,
-  { startRow, startColumn }: StartCell
+  { startRow, startColumn }: StartCell,
 ) {
   const startCell = grid[startRow][startColumn];
   if (startCell === EMPTY_VALUE || gridValToColor[startCell] !== turn) {
@@ -54,7 +52,7 @@ function allLogicalLegalMovesForCell(
   }
   return isThereAnEatingPossibilityForGivenColor(
     grid,
-    gridValToColor[grid[startRow][startColumn]]
+    gridValToColor[grid[startRow][startColumn]],
   )
     ? allLegalEatingMovesForCell(grid, startRow, startColumn)
     : allLegalNonEatingMovesForCell(grid, startRow, startColumn);
@@ -63,14 +61,14 @@ function allLogicalLegalMovesForCell(
 function isThereAnEatingPossibilityForGivenColor(grid: Grid, color?: Color) {
   return allCellsForColor(grid, color).some(
     ({ row, column }) =>
-      allLegalEatingMovesForCell(grid, row, column).length > 0
+      allLegalEatingMovesForCell(grid, row, column).length > 0,
   );
 }
 
 export function allLegalEatingMovesForCell(
   grid: Grid,
   startRow: number,
-  startColumn: number
+  startColumn: number,
 ) {
   const eatingDxs = [2, -2];
   const possibleEatings: PotentialMoves = [];
@@ -107,7 +105,7 @@ export function allLegalEatingMovesForCell(
               },
               startCell,
               new GridUpdate(oneBeforeRow, oneBeforeColumn),
-              new GridUpdate(startRow, startColumn)
+              new GridUpdate(startRow, startColumn),
             ),
           });
         }
@@ -131,7 +129,7 @@ export function didColorLose(grid: Grid, color: Color) {
   return !allCellsForColor(grid, color).some(
     ({ row, column }) =>
       allLegalEatingMovesForCell(grid, row, column).length > 0 ||
-      allLegalNonEatingMovesForCell(grid, row, column).length > 0
+      allLegalNonEatingMovesForCell(grid, row, column).length > 0,
   );
 }
 
@@ -149,7 +147,7 @@ function areColumnsOutOfBounds(...indices: number[]) {
 function allLegalNonEatingMovesForCell(
   grid: Grid,
   startRow: number,
-  startColumn: number
+  startColumn: number,
 ) {
   const movingDxs = [1, -1];
 
@@ -176,7 +174,7 @@ function allLegalNonEatingMovesForCell(
               finalColumn,
             },
             startCell,
-            new GridUpdate(startRow, startColumn)
+            new GridUpdate(startRow, startColumn),
           ),
         });
       }
@@ -241,14 +239,14 @@ export class BoardState {
               startRow: cell.row,
               startColumn: cell.column,
             }),
-          ] as const
+          ] as const,
       )
       .filter(([, moves]) => moves.length);
   }
 
   get piecesThatCanMove() {
     return this.effectivePieces.filter(
-      ({ row, column }) => this.getLegalTargets(row, column).length
+      ({ row, column }) => this.getLegalTargets(row, column).length,
     );
   }
 
@@ -260,15 +258,18 @@ export class BoardState {
 
   getLegalTargets(startRow: number, startColumn: number) {
     return allLogicalLegalMovesForCell(this, { startRow, startColumn }).map(
-      ({ finalCell }) => finalCell
+      ({ finalCell }) => finalCell,
     );
   }
 
   static computeGrid(grid: Grid, updates: GridUpdate[]) {
     const gridCopy = deepGridCopy(grid);
-    updates.forEach(({ indices: { row, column }, value }) => {
+    for (const {
+      indices: { row, column },
+      value,
+    } of updates) {
       gridCopy[row][column] = value;
-    });
+    }
     return gridCopy;
   }
 
@@ -287,9 +288,11 @@ export class BoardState {
   /**
    * From serialized state, in worker
    */
-  static deserialize(serialized: {
-    [K in keyof BoardState]: BoardState[K];
-  }): BoardState {
+  static deserialize(
+    serialized: {
+      [K in keyof BoardState]: BoardState[K];
+    },
+  ): BoardState {
     return new BoardState(serialized);
   }
 }

@@ -17,9 +17,9 @@ export class GridUpdate {
   ) {
     const updates = [];
     updates.push(new GridUpdate(final.finalRow, final.finalColumn, finalVal));
-    remove.forEach(({ indices }) =>
-      updates.push(new GridUpdate(indices.row, indices.column))
-    );
+    for (const { indices } of remove) {
+      updates.push(new GridUpdate(indices.row, indices.column));
+    }
     return updates;
   }
 }
