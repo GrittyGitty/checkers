@@ -11,15 +11,13 @@
     <link rel="preload" as="image" href="./black.webp" />
     <link rel="preload" as="image" href="./red-king.webp" />
     <link rel="preload" as="image" href="./black-king.webp" />
-    <script>
-        function set() {
-            let cell_size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.121, 67);
-            document.documentElement.style.setProperty('--cellsize', `${cell_size}px`);
-        }
-        set();
-        window.addEventListener("resize", set);
-    </script>
-    <style>* {
+    <style>:root {
+  --viewport-min: min(100vh, 100vw);
+  --calculated-size: calc(var(--viewport-min) * 0.121);
+  --cellsize: min(var(--calculated-size), 67px);
+}
+
+* {
   font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
   font-size: 1.05em;
 }
